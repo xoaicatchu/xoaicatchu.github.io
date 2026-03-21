@@ -486,24 +486,19 @@
         });
     }
 
-    // Real view counter using CountAPI
+    // Real view counter using counterapi.dev (free, no signup, cross-user)
     (async () => {
         const el = document.getElementById('viewCount');
         try {
-            const ns = 'vietda-ai-blog';
-            const key = 'hl7-fhir-post';
-            const res = await fetch(`https://api.countapi.xyz/hit/${ns}/${key}`);
+            const res = await fetch('https://api.counterapi.dev/v1/xoaicatchu-hl7fhir/visits/up');
             if (res.ok) {
                 const data = await res.json();
-                el.textContent = data.value.toLocaleString('vi-VN');
+                el.textContent = data.count.toLocaleString('vi-VN');
             } else {
-                // Fallback: localStorage counter
-                let count = parseInt(localStorage.getItem('hl7_fhir_views') || '0') + 1;
-                localStorage.setItem('hl7_fhir_views', count);
-                el.textContent = count.toLocaleString('vi-VN');
+                throw new Error('API failed');
             }
         } catch {
-            // Fallback: localStorage counter
+            // Fallback: localStorage
             let count = parseInt(localStorage.getItem('hl7_fhir_views') || '0') + 1;
             localStorage.setItem('hl7_fhir_views', count);
             el.textContent = count.toLocaleString('vi-VN');
