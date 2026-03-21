@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev + AI: Hành Trình Pair Programming Với Trí Tuệ Nhân Tạo</title>
+    <meta name="description" content="Chia sẻ kinh nghiệm thực chiến sử dụng AI như một đồng đội lập trình — từ xây dựng hệ thống real-time sync, tối ưu backend 5000 CCU, đến stress test 20,000 users.">
+    <meta name="keywords" content="AI, pair programming, developer, software engineering, trí tuệ nhân tạo, lập trình">
+    <meta name="author" content="viet.ai">
+    <meta property="og:title" content="Dev + AI: Hành Trình Pair Programming Với Trí Tuệ Nhân Tạo">
+    <meta property="og:description" content="Chia sẻ kinh nghiệm thực chiến sử dụng AI như một đồng đội lập trình.">
+    <meta property="og:type" content="article">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #000000;
+            --bg-elevated: #0a0a0a;
+            --bg-card: #111111;
+            --bg-card-hover: #161616;
+            --bg-code: #0a0a0a;
+            --text-primary: #f5f5f7;
+            --text-secondary: #a1a1a6;
+            --text-tertiary: #6e6e73;
+            --accent: #2997ff;
+            --accent-hover: #0077ed;
+            --green: #30d158;
+            --orange: #ff9f0a;
+            --red: #ff453a;
+            --purple: #bf5af2;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.15);
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.75;
+            font-size: 17px;
+            overflow-x: hidden;
+        }
+
+        ::selection {
+            background: rgba(41, 151, 255, 0.3);
+        }
+
+        ::-webkit-scrollbar { width: 0; }
+
+        /* ========== LAYOUT ========== */
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .container-wide {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ========== NAVIGATION ========== */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 12px 0;
+            background: rgba(0, 0, 0, 0.72);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .navbar .container-wide {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-brand {
+            font-size: 21px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 4px;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 400;
+            padding: 6px 12px;
+            border-radius: 20px;
+            transition: all 0.25s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        /* ========== READING PROGRESS ========== */
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 2px;
+            background: var(--accent);
+            z-index: 101;
+            transition: width 0.1s linear;
+        }
+
+        /* ========== HERO ========== */
+        .hero {
+            padding: 160px 0 80px;
+            text-align: center;
+        }
+
+        .hero-eyebrow {
+            display: inline-block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: -0.2px;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 {
+            font-size: clamp(40px, 6vw, 72px);
+            font-weight: 800;
+            line-height: 1.05;
+            letter-spacing: -3px;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+        }
+
+        .hero-subtitle {
+            font-size: 19px;
+            color: var(--text-secondary);
+            max-width: 520px;
+            margin: 0 auto 36px;
+            line-height: 1.5;
+            font-weight: 400;
+            letter-spacing: -0.1px;
+        }
+
+        .hero-meta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            font-size: 13px;
+            color: var(--text-tertiary);
+            font-weight: 400;
+        }
+
+        .hero-meta .sep {
+            width: 3px;
+            height: 3px;
+            background: var(--text-tertiary);
+            border-radius: 50%;
+        }
+
+        /* ========== DIVIDER ========== */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 0 auto;
+        }
+
+        /* ========== TABLE OF CONTENTS ========== */
+        .toc {
+            padding: 48px 0;
+        }
+
+        .toc-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-tertiary);
+            margin-bottom: 20px;
+        }
+
+        .toc ol {
+            list-style: none;
+            counter-reset: toc;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 6px;
+        }
+
+        .toc ol li {
+            counter-increment: toc;
+        }
+
+        .toc ol li a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .toc ol li a::before {
+            content: counter(toc, decimal-leading-zero);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-tertiary);
+            min-width: 20px;
+        }
+
+        .toc ol li a:hover {
+            color: var(--text-primary);
+            background: var(--bg-card);
+        }
+
+        /* ========== ARTICLE ========== */
+        .article {
+            padding-bottom: 80px;
+        }
+
+        .article h2 {
+            font-size: 34px;
+            font-weight: 700;
+            letter-spacing: -1.2px;
+            color: var(--text-primary);
+            margin: 80px 0 12px;
+            line-height: 1.15;
+        }
+
+        .article h2:first-of-type {
+            margin-top: 0;
+        }
+
+        .article h3 {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            margin: 40px 0 12px;
+            color: var(--text-primary);
+        }
+
+        .article p {
+            margin-bottom: 18px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .article strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .article em {
+            color: var(--accent);
+            font-style: normal;
+        }
+
+        .article a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .article a:hover {
+            color: var(--accent-hover);
+        }
+
+        .article ul, .article ol {
+            margin: 12px 0 24px;
+            padding-left: 20px;
+        }
+
+        .article li {
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        .article li::marker {
+            color: var(--text-tertiary);
+        }
+
+        /* ========== BLOCKQUOTE ========== */
+        blockquote {
+            border-left: 2px solid var(--accent);
+            padding: 8px 24px;
+            margin: 32px 0;
+        }
+
+        blockquote p {
+            color: var(--text-primary) !important;
+            font-size: 20px !important;
+            font-weight: 500;
+            line-height: 1.5;
+            letter-spacing: -0.3px;
+        }
+
+        /* ========== INLINE CODE ========== */
+        code {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            background: var(--bg-card);
+            padding: 2px 8px;
+            border-radius: 5px;
+            color: var(--text-primary);
+        }
+
+        /* ========== CODE BLOCKS ========== */
+        .code-block {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin: 24px 0;
+            overflow: hidden;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-lang {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .code-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .code-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            opacity: 0.6;
+        }
+
+        .code-dots span:nth-child(1) { background: #ff5f57; }
+        .code-dots span:nth-child(2) { background: #febc2e; }
+        .code-dots span:nth-child(3) { background: #28c840; }
+
+        .code-block pre {
+            padding: 16px 20px;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .code-block .kw { color: #ff7b72; }
+        .code-block .st { color: #a5d6ff; }
+        .code-block .cm { color: #6e7681; font-style: italic; }
+        .code-block .fn { color: #d2a8ff; }
+        .code-block .nr { color: #79c0ff; }
+
+        /* ========== CALLOUTS ========== */
+        .callout {
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 28px 0;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+
+        .callout-icon {
+            font-size: 18px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .callout p {
+            font-size: 15px !important;
+            margin-bottom: 0 !important;
+            line-height: 1.6;
+        }
+
+        .callout.blue { border-color: rgba(41, 151, 255, 0.2); }
+        .callout.yellow { border-color: rgba(255, 159, 10, 0.2); }
+        .callout.green { border-color: rgba(48, 209, 88, 0.2); }
+        .callout.red { border-color: rgba(255, 69, 58, 0.2); }
+
+        /* ========== STATS ========== */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 32px 0;
+        }
+
+        .stat {
+            background: var(--bg-card);
+            padding: 28px 20px;
+            text-align: center;
+        }
+
+        .stat-num {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            color: var(--text-primary);
+            line-height: 1.1;
+        }
+
+        .stat-desc {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* ========== TIMELINE ========== */
+        .timeline {
+            position: relative;
+            padding-left: 28px;
+            margin: 28px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 4px;
+            top: 6px;
+            bottom: 6px;
+            width: 1px;
+            background: var(--border);
+        }
+
+        .tl-item {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .tl-item::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 8px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--text-tertiary);
+        }
+
+        .tl-item:nth-child(1)::before { background: var(--accent); }
+        .tl-item:nth-child(2)::before { background: var(--purple); }
+        .tl-item:nth-child(3)::before { background: var(--orange); }
+        .tl-item:nth-child(4)::before { background: var(--green); }
+
+        .tl-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .tl-desc {
+            font-size: 15px;
+            color: var(--text-secondary);
+        }
+
+        /* ========== TABLE ========== */
+        .table-wrap {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 28px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+
+        th {
+            background: var(--bg-card);
+            color: var(--text-tertiary);
+            font-weight: 600;
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .stars { color: var(--orange); letter-spacing: 1px; }
+
+        /* ========== TAGS ========== */
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 40px 0 32px;
+        }
+
+        .tag {
+            padding: 5px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-tertiary);
+            transition: all 0.2s;
+        }
+
+        .tag:hover {
+            color: var(--text-secondary);
+            border-color: var(--border-hover);
+        }
+
+        /* ========== SHARE ========== */
+        .share {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 24px 0;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .share-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .share-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-tertiary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .share-btn:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+        }
+
+        /* ========== FOOTER ========== */
+        .footer {
+            padding: 48px 0;
+            text-align: center;
+        }
+
+        .footer p {
+            color: var(--text-tertiary);
+            font-size: 13px;
+        }
+
+        /* ========== FADE IN ========== */
+        .fi {
+            opacity: 0;
+            transform: translateY(16px);
+            transition: all 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .fi.v {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .hero { padding: 120px 0 60px; }
+            .hero h1 { letter-spacing: -2px; }
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            .nav-links { display: none; }
+            .toc ol { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 480px) {
+            body { font-size: 16px; }
+            .article h2 { font-size: 28px; }
+            .stat-num { font-size: 26px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="reading-progress" id="readingProgress"></div>
+
+<nav class="navbar" id="navbar">
+    <div class="container-wide">
+        <div class="nav-brand">viet.ai</div>
+        <div class="nav-links">
+            <a href="#intro">Intro</a>
+            <a href="#projects">Dự án</a>
+            <a href="#lessons">Bài học</a>
+            <a href="#future">Tương lai</a>
+        </div>
+    </div>
+</nav>
+
+<header class="hero">
+    <div class="container">
+        <span class="hero-eyebrow">Kinh nghiệm thực chiến</span>
+        <h1>Dev + AI.<br>Pair Programming<br>thời đại mới.</h1>
+        <p class="hero-subtitle">
+            Từ sceptic thành believer — chia sẻ thực tế về việc sử dụng AI 
+            như một đồng đội lập trình, qua những dự án enterprise thực chiến.
+        </p>
+        <div class="hero-meta">
+            <span>21 tháng 3, 2026</span>
+            <span class="sep"></span>
+            <span>12 phút đọc</span>
+            <span class="sep"></span>
+            <span>AI &bull; Developer Experience</span>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="divider"></div>
+</div>
+
+<main class="container">
+
+    <div class="toc fi">
+        <div class="toc-label">Mục lục</div>
+        <ol>
+            <li><a href="#intro">Cơ duyên bắt đầu dùng AI để code</a></li>
+            <li><a href="#projects">Những dự án thực chiến với AI</a></li>
+            <li><a href="#ai-good">AI làm tốt những gì?</a></li>
+            <li><a href="#ai-bad">AI vẫn chưa thay thế được gì?</a></li>
+            <li><a href="#lessons">5 bài học xương máu</a></li>
+            <li><a href="#workflow">Workflow tối ưu: Dev + AI</a></li>
+            <li><a href="#future">Tương lai của nghề Dev</a></li>
+        </ol>
+    </div>
+
+    <article class="article">
+
+        <h2 id="intro">Cơ duyên bắt đầu dùng AI để code</h2>
+        <div class="fi">
+            <p>
+                Tôi là một developer full-stack, hàng ngày chiến đấu với <strong>Angular, .NET, SignalR, RabbitMQ</strong> và cả một hệ thống y tế (HIS) phức tạp với <strong>HL7 FHIR, BHYT</strong>. Một ngày, tôi quyết định thử dùng AI như một "đồng đội pair programming" — không phải để nó viết code thay, mà để xem nó có thể giúp tôi <em>tư duy nhanh hơn</em> không.
+            </p>
+            <p>
+                Kết quả? Nó đã thay đổi hoàn toàn cách tôi làm việc. Nhưng không phải theo cách bạn nghĩ. Không phải kiểu "AI viết hết code cho tôi". Mà là kiểu <strong>AI giúp tôi suy nghĩ rõ ràng hơn, debug nhanh hơn, và khám phá những kiến trúc mà trước đây tôi phải mất hàng tuần research</strong>.
+            </p>
+            <blockquote>
+                <p>"AI không phải là thay thế developer. AI là chiếc kính hiển vi cho tư duy — giúp bạn nhìn thấy những gì trước đây mờ nhạt."</p>
+            </blockquote>
+        </div>
+
+        <h2 id="projects">Những dự án thực chiến với AI</h2>
+
+        <div class="fi">
+            <p>Trong vài tháng qua, tôi đã pair programming với AI trên nhiều dự án thực tế. Đây là những case study đáng nhớ nhất.</p>
+
+            <h3>Project 1: TodoSync — Real-time Sync Engine</h3>
+            <p>
+                <strong>TodoSync</strong> nghe có vẻ đơn giản — một app todo list. Nhưng bên dưới lớp vỏ đó là một hệ thống đồng bộ real-time cực kỳ phức tạp, sử dụng <strong>Dexie (IndexedDB), NgRx, SignalR, và BroadcastChannel</strong>.
+            </p>
+            <p>
+                Khi gặp vấn đề sync bị conflict giữa các tab và devices, tôi đã ngồi với AI để phân tích toàn bộ luồng dữ liệu. AI đã giúp tôi:
+            </p>
+            <ul>
+                <li><strong>Map ra kiến trúc</strong> đồng bộ hiện tại và tìm ra điểm nghẽn</li>
+                <li><strong>Đề xuất local-first architecture</strong> sử dụng <code>liveQuery</code> của Dexie thay vì quản lý state thủ công qua NgRx</li>
+                <li><strong>Debug sync issues</strong> trong task reordering — một bug cực kỳ khó reproduce</li>
+                <li><strong>Refactor lại data flow</strong> để đảm bảo consistency across devices</li>
+            </ul>
+        </div>
+
+        <div class="callout blue fi">
+            <span class="callout-icon">💡</span>
+            <p><strong>Insight:</strong> AI đặc biệt mạnh trong việc phân tích kiến trúc hệ thống. Nó có thể "nhìn" toàn bộ codebase và chỉ ra những pattern mà bạn có thể bỏ qua khi focus vào từng file riêng lẻ.</p>
+        </div>
+
+        <div class="fi">
+            <h3>Project 2: Backend Performance — 5,000 CCU Challenge</h3>
+            <p>
+                Thử thách tiếp theo: tối ưu backend TodoSync để handle <strong>5,000 concurrent users</strong>. Vấn đề ban đầu: hệ thống gặp <strong>high failure rate</strong> và <strong>RPS quá thấp</strong>.
+            </p>
+
+            <div class="timeline">
+                <div class="tl-item">
+                    <div class="tl-title">Phân tích bottleneck</div>
+                    <div class="tl-desc">AI giúp review k6 load test results, identify được bottleneck ở database writes.</div>
+                </div>
+                <div class="tl-item">
+                    <div class="tl-title">Thiết kế async write path</div>
+                    <div class="tl-desc">Implement RabbitMQ message queue để tách biệt read/write path, giảm tải database.</div>
+                </div>
+                <div class="tl-item">
+                    <div class="tl-title">Fine-tune parameters</div>
+                    <div class="tl-desc">Điều chỉnh connection pool, batch size, consumer count dựa trên load test feedback.</div>
+                </div>
+                <div class="tl-item">
+                    <div class="tl-title">Verify & Document</div>
+                    <div class="tl-desc">Chạy lại load test, verify kết quả, và document toàn bộ architectural changes.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats fi">
+            <div class="stat">
+                <div class="stat-num">5,000</div>
+                <div class="stat-desc">Concurrent Users</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">20,000</div>
+                <div class="stat-desc">Stress Test Users</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">~0%</div>
+                <div class="stat-desc">Failure Rate</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">5 min</div>
+                <div class="stat-desc">Test Duration</div>
+            </div>
+        </div>
+
+        <div class="fi">
+            <h3>Project 3: Frontend Stress Test — 20,000 Users</h3>
+            <p>
+                Không dừng lại ở backend, tôi tiếp tục stress test frontend với <strong>20,000 concurrent users trong 5 phút</strong>. Setup bao gồm k6, NGINX reverse proxy, và mô phỏng realistic user flows (API calls + WebSocket connections).
+            </p>
+            <p>
+                AI đã giúp tôi <strong>viết test script mô phỏng realistic user behavior</strong>, debug lỗi <code>400 Bad Request</code> do incorrect payload format, và phân tích kết quả để identify performance bottlenecks.
+            </p>
+
+            <h3>Project 4: Hệ thống Y tế — HL7 FHIR & Digital Signing</h3>
+            <p>
+                Đây là project phức tạp nhất — một hệ thống thông tin bệnh viện (HIS) tích hợp với RIS, xử lý <strong>HL7 FHIR, chữ ký số, BHYT</strong>, và quản lý phiếu chỉ định dịch vụ chẩn đoán hình ảnh.
+            </p>
+            <p>
+                AI đã trở thành "domain expert thứ hai" của tôi — giúp phân tích luồng ký số xuyên suốt HIS → RIS → service_integrate, xác định rõ vai trò của từng component, và thậm chí giúp thiết kế logic ràng buộc thời gian giữa các dịch vụ CDHA.
+            </p>
+        </div>
+
+        <div class="callout yellow fi">
+            <span class="callout-icon">⚠️</span>
+            <p><strong>Lưu ý:</strong> Với domain-specific systems như y tế, AI cần được "dạy" context liên tục. Nó không tự biết quy trình BHYT hay luồng ký số. Nhưng một khi bạn cung cấp đủ context, nó sẽ trở thành một trợ thủ cực kỳ mạnh.</p>
+        </div>
+
+        <h2 id="ai-good">AI làm tốt những gì?</h2>
+        <div class="fi">
+            <p>Sau nhiều tháng thực chiến, đây là assessment trung thực:</p>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Khả năng</th>
+                            <th>Mức độ</th>
+                            <th>Ghi chú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Phân tích codebase lớn</td><td><span class="stars">★★★★★</span></td><td>Nhìn toàn cảnh nhanh hơn con người</td></tr>
+                        <tr><td>Debug & tìm root cause</td><td><span class="stars">★★★★☆</span></td><td>Rất mạnh khi có đủ log/context</td></tr>
+                        <tr><td>Đề xuất architecture</td><td><span class="stars">★★★★☆</span></td><td>Biết nhiều patterns, cần validation</td></tr>
+                        <tr><td>Viết boilerplate code</td><td><span class="stars">★★★★★</span></td><td>Tiết kiệm cực nhiều thời gian</td></tr>
+                        <tr><td>Refactoring</td><td><span class="stars">★★★★☆</span></td><td>Rename, restructure, modernize</td></tr>
+                        <tr><td>Load test & analysis</td><td><span class="stars">★★★★☆</span></td><td>Viết script + phân tích kết quả</td></tr>
+                        <tr><td>Documentation</td><td><span class="stars">★★★★★</span></td><td>Docs, walkthrough, arch diagrams</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2 id="ai-bad">AI vẫn chưa thay thế được gì?</h2>
+        <div class="fi">
+            <p>Đây là phần quan trọng — <strong>AI không phải thần thánh</strong>. Có những thứ nó vẫn cần con người:</p>
+            <ul>
+                <li><strong>Domain knowledge sâu:</strong> AI không tự biết quy trình BHYT, luồng ký số HIS/RIS, hay business rules ngành y tế. <em>Bạn phải là người cung cấp context.</em></li>
+                <li><strong>Quyết định kiến trúc cuối cùng:</strong> AI đề xuất local-first hay event-driven, nhưng <em>chọn cái nào phù hợp</em> với constraints thực tế vẫn là việc của bạn.</li>
+                <li><strong>Reproduce edge cases:</strong> Bug sync reordering — AI phân tích code được, nhưng reproduce bug scenario cụ thể cần kinh nghiệm hands-on.</li>
+                <li><strong>Hiểu context ngầm:</strong> Tại sao comment cũ viết theo cách đó? Lịch sử quyết định kỹ thuật? AI không biết nếu bạn không kể.</li>
+                <li><strong>Production incidents:</strong> Khi system chết lúc 2 giờ sáng, bạn cần kinh nghiệm, bản năng, và sự bình tĩnh.</li>
+            </ul>
+        </div>
+
+        <div class="callout red fi">
+            <span class="callout-icon">🔥</span>
+            <p><strong>Bài học đắt giá:</strong> Đừng bao giờ copy-paste code từ AI mà không hiểu nó. Trong project y tế, AI từng suggest sai logic xử lý <code>thoiGianThucHien</code> — nếu không review kỹ, data bệnh nhân có thể bị sai.</p>
+        </div>
+
+        <h2 id="lessons">5 Bài học xương máu</h2>
+        <div class="fi">
+            <h3>1. Prompt Engineering là kỹ năng thật sự</h3>
+            <p>
+                Cách bạn hỏi AI quyết định chất lượng output. Cung cấp: <strong>context, constraint, expectation</strong>. Giống y như brief cho một junior dev — càng rõ ràng, output càng tốt.
+            </p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots"><span></span><span></span><span></span></div>
+                    <div class="code-lang">Prompt</div>
+                </div>
+                <pre><span class="cm">// ❌ Prompt kém</span>
+<span class="st">"Fix cái sync bị lỗi"</span>
+
+<span class="cm">// ✅ Prompt hiệu quả</span>
+<span class="st">"Hệ thống TodoSync sử dụng Dexie + SignalR 
+để sync data giữa các devices. Khi reorder 
+tasks, sync bị conflict giữa 2 tabs. Dưới 
+đây là code hiện tại và error log. Hãy phân 
+tích root cause và đề xuất fix."</span></pre>
+            </div>
+
+            <h3>2. AI là Senior Dev "không có ego"</h3>
+            <p>
+                Điều tuyệt vời nhất: <strong>nó không judge bạn</strong>. Hỏi câu "ngu" cũng được. Hỏi đi hỏi lại cũng được. Đây là learning accelerator cực mạnh — đặc biệt khi explore kiến trúc mới như local-first hay event-driven.
+            </p>
+
+            <h3>3. Đừng dùng AI thay cho tư duy</h3>
+            <p>
+                Bẫy lớn nhất: <strong>dependence</strong>. Nếu dùng AI cho mọi thứ mà không tự suy nghĩ, skill sẽ thui chột. Cách giữ balance: <em>luôn tự suy nghĩ solution trước, rồi mới hỏi AI để validate hoặc tìm cách tốt hơn.</em>
+            </p>
+
+            <h3>4. AI + Domain Knowledge = Siêu năng lực</h3>
+            <p>
+                Tôi có domain knowledge về y tế (HIS, BHYT, HL7 FHIR). AI có knowledge về patterns và khả năng phân tích code nhanh. <strong>Kết hợp hai thứ</strong> này tạo ra output mà cả hai đều không thể đạt được riêng lẻ.
+            </p>
+
+            <h3>5. Document mọi thứ — AI giúp việc này cực tốt</h3>
+            <p>
+                Trước đây tôi lười viết docs. Giờ với AI, mỗi lần hoàn thành task, tôi nhờ nó tạo <strong>walkthrough, architecture decision records, và implementation notes</strong>. Codebase giờ có documentation tốt hơn bao giờ hết.
+            </p>
+        </div>
+
+        <h2 id="workflow">Workflow tối ưu: Dev + AI</h2>
+        <div class="fi">
+            <p>Sau nhiều lần thử nghiệm, đây là workflow hiệu quả nhất:</p>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots"><span></span><span></span><span></span></div>
+                    <div class="code-lang">Workflow</div>
+                </div>
+                <pre><span class="nr">1.</span> <span class="kw">PLANNING</span>  <span class="cm">// Cùng AI phân tích & thiết kế</span>
+   ├── Describe problem với full context
+   ├── AI đề xuất approach + alternatives
+   └── Review & chọn approach phù hợp
+
+<span class="nr">2.</span> <span class="kw">EXECUTION</span> <span class="cm">// AI viết code, bạn review</span>
+   ├── AI generate implementation
+   ├── Review từng chunk, không blindly accept
+   └── Iterate: feedback → adjust → review
+
+<span class="nr">3.</span> <span class="kw">VERIFICATION</span> <span class="cm">// AI giúp test & document</span>
+   ├── AI viết test cases & scripts
+   ├── Chạy tests, AI phân tích kết quả
+   └── AI tạo documentation & walkthrough</pre>
+            </div>
+        </div>
+
+        <div class="callout green fi">
+            <span class="callout-icon">🎯</span>
+            <p><strong>Key insight:</strong> Workflow PLANNING → EXECUTION → VERIFICATION không chỉ là cách dùng AI — đây là engineering best practice được amplify bởi AI. Bạn vẫn là architect, AI là builder + reviewer phụ.</p>
+        </div>
+
+        <h2 id="future">Tương lai của nghề Dev</h2>
+        <div class="fi">
+            <p>
+                Câu hỏi mà mọi dev đều lo lắng: <strong>"AI có thay thế developer không?"</strong>
+            </p>
+            <p>
+                Câu trả lời trung thực sau nhiều tháng thực chiến: <strong>Không. Nhưng dev không dùng AI sẽ bị thay thế bởi dev có dùng AI.</strong>
+            </p>
+            <p>
+                Nghĩ thế này: khi có máy tính, kế toán viên không biến mất — họ dùng Excel và trở nên mạnh hơn gấp 100 lần. Dev cũng vậy. AI là "Excel của developer".
+            </p>
+            <p>Những kỹ năng sẽ <em>tăng giá trị</em> trong thời đại AI:</p>
+            <ul>
+                <li><strong>System Design & Architecture thinking</strong> — AI code được, nhưng thiết kế hệ thống ở scale vẫn cần con người.</li>
+                <li><strong>Domain expertise</strong> — Hiểu sâu về y tế, tài chính, logistics. Đây là "moat" mà AI không thể tự xây.</li>
+                <li><strong>Communication & Leadership</strong> — Giải thích technical decisions cho stakeholders, lead team.</li>
+                <li><strong>Critical thinking & AI orchestration</strong> — Biết lúc nào nên tin AI, lúc nào nên nghi ngờ.</li>
+            </ul>
+            <blockquote>
+                <p>"Đừng chạy đua với AI. Hãy cưỡi lên nó và phi nhanh hơn tất cả."</p>
+            </blockquote>
+        </div>
+
+        <div class="tags fi">
+            <span class="tag">#AI</span>
+            <span class="tag">#PairProgramming</span>
+            <span class="tag">#DeveloperExperience</span>
+            <span class="tag">#Angular</span>
+            <span class="tag">#DotNET</span>
+            <span class="tag">#SignalR</span>
+            <span class="tag">#RabbitMQ</span>
+            <span class="tag">#HL7FHIR</span>
+            <span class="tag">#Performance</span>
+            <span class="tag">#RealTimeSync</span>
+        </div>
+
+        <div class="share fi">
+            <span class="share-label">Share →</span>
+            <button class="share-btn" onclick="shareTwitter()" title="X">𝕏</button>
+            <button class="share-btn" onclick="shareFacebook()" title="Facebook">f</button>
+            <button class="share-btn" onclick="shareLinkedIn()" title="LinkedIn">in</button>
+            <button class="share-btn" onclick="copyLink()" id="copyBtn" title="Copy">🔗</button>
+        </div>
+
+    </article>
+
+    <footer class="footer">
+        <p>© 2026 · Built with ❤️ and AI</p>
+    </footer>
+
+</main>
+
+<script>
+    const bar = document.getElementById('readingProgress');
+    window.addEventListener('scroll', () => {
+        const pct = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+        bar.style.width = pct + '%';
+    });
+
+    const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('v'); obs.unobserve(e.target); }});
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.fi').forEach(el => obs.observe(el));
+
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', e => {
+            e.preventDefault();
+            const t = document.querySelector(a.getAttribute('href'));
+            if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+
+    function shareTwitter() {
+        const u = encodeURIComponent(location.href);
+        const t = encodeURIComponent('Dev + AI: Hành trình pair programming với trí tuệ nhân tạo');
+        open(`https://twitter.com/intent/tweet?text=${t}&url=${u}`, '_blank');
+    }
+    function shareFacebook() { open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(location.href)}`, '_blank'); }
+    function shareLinkedIn() { open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(location.href)}`, '_blank'); }
+    function copyLink() {
+        navigator.clipboard.writeText(location.href).then(() => {
+            const b = document.getElementById('copyBtn');
+            b.textContent = '✓'; setTimeout(() => b.textContent = '🔗', 2000);
+        });
+    }
+</script>
+
+</body>
+</html>
