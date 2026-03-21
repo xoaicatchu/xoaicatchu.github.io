@@ -53,8 +53,11 @@
             color: var(--text-primary);
             line-height: 1.75;
             font-size: 17px;
-            overflow-x: hidden;
+            overflow-x: clip;
+            -webkit-overflow-scrolling: touch;
         }
+
+        html { overflow-x: clip; }
 
         ::selection {
             background: rgba(41, 151, 255, 0.3);
@@ -66,13 +69,15 @@
         .container {
             max-width: 720px;
             margin: 0 auto;
-            padding: 0 24px;
+            padding: 0 20px;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
         .container-wide {
             max-width: 980px;
             margin: 0 auto;
-            padding: 0 24px;
+            padding: 0 20px;
         }
 
         /* ========== NAVIGATION ========== */
@@ -571,7 +576,8 @@
         .table-wrap {
             border: 1px solid var(--border);
             border-radius: 12px;
-            overflow: hidden;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
             margin: 28px 0;
         }
 
@@ -692,17 +698,28 @@
 
         /* ========== RESPONSIVE ========== */
         @media (max-width: 768px) {
-            .hero { padding: 120px 0 60px; }
-            .hero h1 { letter-spacing: -2px; }
+            .hero { padding: 100px 0 48px; }
+            .hero h1 { letter-spacing: -1px; font-size: 32px; }
             .stats { grid-template-columns: repeat(2, 1fr); }
             .nav-links { display: none; }
             .toc ol { grid-template-columns: 1fr; }
+            .callout { padding: 16px; }
+            .code-block pre { padding: 12px 14px; font-size: 12px; }
+            .article-card { padding: 20px 16px; }
+            blockquote { margin-left: 0; padding-left: 16px; }
+            blockquote p { font-size: 17px !important; }
         }
 
         @media (max-width: 480px) {
-            body { font-size: 16px; }
-            .article h2 { font-size: 28px; }
-            .stat-num { font-size: 26px; }
+            body { font-size: 15px; }
+            .container, .container-wide { padding: 0 16px; }
+            .article h2 { font-size: 24px; }
+            .stat-num { font-size: 24px; }
+            .hero h1 { font-size: 28px; }
+            .stats { gap: 1px; }
+            .stat { padding: 20px 12px; }
+            table { font-size: 13px; }
+            th, td { padding: 8px 10px; }
         }
     </style>
 </head>
