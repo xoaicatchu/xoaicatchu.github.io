@@ -3,583 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HL7 FHIR Trong Thực Tế: Bài Học Từ Một HIS Production</title>
-    <meta name="description" content="Chia sẻ kinh nghiệm thực chiến triển khai HL7 FHIR trong hệ thống thông tin bệnh viện — từ digital signing, tích hợp BHYT, đến xử lý chẩn đoán hình ảnh xuyên hệ thống.">
-    <meta name="keywords" content="HL7 FHIR, HIS, RIS, Digital Signing, BHYT, Healthcare IT, Medical Systems">
+    <title>HL7 FHIR Trong Thực Tế: Thách Thức Triển Khai Tại Bệnh Viện Việt Nam</title>
+    <meta name="description" content="Kinh nghiệm thực chiến triển khai HL7 FHIR trong hệ thống HIS bệnh viện Việt Nam — thách thức, giải pháp, và bài học rút ra.">
     <meta name="author" content="Việt Anh">
-    <meta property="og:title" content="HL7 FHIR Trong Thực Tế: Bài Học Từ Một HIS Production">
-    <meta property="og:description" content="Không phải lý thuyết. Đây là những gì thực sự xảy ra khi triển khai HL7 FHIR trong một bệnh viện thực tế tại Việt Nam.">
+    <meta property="og:title" content="HL7 FHIR Trong Thực Tế: Thách Thức Triển Khai Tại Bệnh Viện Việt Nam">
+    <meta property="og:description" content="Kinh nghiệm thực chiến triển khai HL7 FHIR tại bệnh viện Việt Nam.">
     <meta property="og:type" content="article">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
     <style>
-        *, *::before, *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --bg: #000000;
-            --bg-elevated: #0a0a0a;
-            --bg-card: #111111;
-            --bg-card-hover: #161616;
-            --bg-code: #0a0a0a;
-            --text-primary: #f5f5f7;
-            --text-secondary: #a1a1a6;
-            --text-tertiary: #6e6e73;
-            --accent: #2997ff;
-            --accent-hover: #0077ed;
-            --green: #30d158;
-            --orange: #ff9f0a;
-            --red: #ff453a;
-            --purple: #bf5af2;
-            --teal: #64d2ff;
-            --border: rgba(255, 255, 255, 0.08);
-            --border-hover: rgba(255, 255, 255, 0.15);
-            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
-            --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+            --bg: #ffffff;
+            --bg-alt: #f7fafc;
+            --text: #1a202c;
+            --text-secondary: #2d3748;
+            --text-muted: #718096;
+            --accent: #2b6cb0;
+            --accent-light: #ebf8ff;
+            --accent-border: #bee3f8;
+            --green: #276749;
+            --green-light: #f0fff4;
+            --green-border: #c6f6d5;
+            --orange: #c05621;
+            --orange-light: #fffaf0;
+            --orange-border: #feebc8;
+            --red: #c53030;
+            --red-light: #fff5f5;
+            --red-border: #fed7d7;
+            --border: #e2e8f0;
+            --border-light: #edf2f7;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-serif: 'Merriweather', Georgia, serif;
+            --font-mono: 'JetBrains Mono', monospace;
         }
 
-        html {
-            scroll-behavior: smooth;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
+        html { scroll-behavior: smooth; }
+        ::selection { background: var(--accent-light); color: var(--accent); }
 
         body {
             font-family: var(--font-sans);
             background: var(--bg);
-            color: var(--text-primary);
-            line-height: 1.75;
-            font-size: 17px;
-            overflow-x: hidden;
+            color: var(--text);
+            line-height: 1.8;
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
         }
 
-        ::selection { background: rgba(41, 151, 255, 0.3); }
-        ::-webkit-scrollbar { width: 0; }
+        /* ========== LAYOUT ========== */
+        .container { max-width: 680px; margin: 0 auto; padding: 0 24px; }
 
-        .container {
-            max-width: 720px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
-
-        .container-wide {
-            max-width: 980px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
+        /* ========== PROGRESS ========== */
+        .progress { position: fixed; top: 0; left: 0; height: 2px; background: var(--accent); z-index: 100; transition: width 80ms linear; }
 
         /* ========== NAV ========== */
-        .navbar {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            z-index: 100;
+        nav {
+            position: sticky; top: 0; z-index: 50;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border-light);
             padding: 12px 0;
-            background: rgba(0, 0, 0, 0.72);
-            backdrop-filter: saturate(180%) blur(20px);
-            -webkit-backdrop-filter: saturate(180%) blur(20px);
-            border-bottom: 1px solid var(--border);
         }
-
-        .navbar .container-wide {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .nav-brand {
-            font-size: 21px;
-            font-weight: 700;
-            background: linear-gradient(90deg, #2997ff, #bf5af2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -0.3px;
-        }
-
-        .nav-brand a {
-            text-decoration: none;
-            color: inherit;
-            -webkit-text-fill-color: inherit;
-        }
-
-        .nav-links { display: flex; gap: 4px; }
-
+        nav .container { display: flex; justify-content: space-between; align-items: center; }
+        .brand { font-weight: 700; font-size: 16px; color: var(--accent); text-decoration: none; }
+        .nav-links { display: flex; gap: 24px; }
         .nav-links a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 13px;
-            padding: 6px 12px;
-            border-radius: 20px;
-            transition: all 0.25s ease;
+            font-size: 13px; font-weight: 500; color: var(--text-muted);
+            text-decoration: none; transition: color 0.2s;
         }
-
-        .nav-links a:hover { color: var(--text-primary); }
-
-        /* ========== READING PROGRESS ========== */
-        .reading-progress {
-            position: fixed;
-            top: 0; left: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #30d158, #2997ff, #bf5af2, #30d158);
-            background-size: 200% 100%;
-            animation: progressShimmer 3s linear infinite;
-            z-index: 101;
-            transition: width 0.1s linear;
-        }
-
-        @keyframes progressShimmer {
-            0% { background-position: 0% 0; }
-            100% { background-position: 200% 0; }
-        }
+        .nav-links a:hover { color: var(--text); }
 
         /* ========== HERO ========== */
-        .hero {
-            padding: 160px 0 80px;
-            text-align: center;
-            position: relative;
+        .hero { padding: 72px 0 48px; border-bottom: 1px solid var(--border-light); }
+        .hero-label {
+            font-size: 12px; font-weight: 600; letter-spacing: 1.5px;
+            text-transform: uppercase; color: var(--accent);
+            margin-bottom: 20px;
         }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: 45%;
-            left: 50%;
-            transform: translate(-50%, -55%);
-            width: 700px;
-            height: 500px;
-            background: radial-gradient(ellipse, rgba(48,209,88,0.07) 0%, rgba(41,151,255,0.05) 40%, transparent 70%);
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .hero-eyebrow {
-            display: inline-block;
-            font-size: 14px;
-            font-weight: 600;
-            background: linear-gradient(90deg, #30d158, #2997ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -0.2px;
-            margin-bottom: 16px;
-        }
-
         .hero h1 {
-            font-size: clamp(36px, 5.5vw, 64px);
-            font-weight: 800;
-            line-height: 1.08;
-            letter-spacing: -2.5px;
-            background: linear-gradient(135deg, #f5f5f7 0%, #f5f5f7 20%, #30d158 45%, #2997ff 70%, #bf5af2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 20px;
+            font-family: var(--font-serif);
+            font-size: clamp(28px, 4vw, 42px);
+            font-weight: 700; line-height: 1.3; letter-spacing: -0.3px;
+            color: var(--text); margin-bottom: 20px;
         }
-
-        .hero-subtitle {
-            font-size: 19px;
-            color: var(--text-secondary);
-            max-width: 540px;
-            margin: 0 auto 36px;
-            line-height: 1.5;
-            font-weight: 400;
+        .hero-desc {
+            font-size: 18px; line-height: 1.7;
+            color: var(--text-secondary); max-width: 580px;
+            margin-bottom: 28px;
         }
-
-        .hero-meta {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            font-size: 13px;
-            color: var(--text-tertiary);
-        }
-
-        .hero-meta .sep {
-            width: 3px; height: 3px;
-            background: var(--text-tertiary);
-            border-radius: 50%;
-        }
-
-        .divider { height: 1px; background: var(--border); }
-
-        /* ========== TOC ========== */
-        .toc { padding: 48px 0; }
-
-        .toc-label {
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-tertiary);
-            margin-bottom: 20px;
-        }
-
-        .toc ol {
-            list-style: none;
-            counter-reset: toc;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 6px;
-        }
-
-        .toc ol li { counter-increment: toc; }
-
-        .toc ol li a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 15px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            transition: all 0.2s ease;
-        }
-
-        .toc ol li a::before {
-            content: counter(toc, decimal-leading-zero);
-            font-family: var(--font-mono);
-            font-size: 11px;
-            color: var(--text-tertiary);
-            min-width: 20px;
-        }
-
-        .toc ol li a:hover {
-            color: var(--text-primary);
-            background: var(--bg-card);
-        }
+        .hero-meta { display: flex; gap: 20px; font-size: 13px; color: var(--text-muted); }
+        .hero-meta span { display: flex; align-items: center; gap: 4px; }
 
         /* ========== ARTICLE ========== */
-        .article { padding-bottom: 80px; }
-
-        .article h2 {
-            font-size: 34px;
-            font-weight: 700;
-            letter-spacing: -1.2px;
-            color: var(--text-primary);
-            margin: 80px 0 12px;
-            line-height: 1.15;
+        article { padding: 48px 0 64px; }
+        article h2 {
+            font-family: var(--font-serif);
+            font-size: 26px; font-weight: 700; line-height: 1.3;
+            margin: 56px 0 16px; color: var(--text);
+            padding-top: 24px; border-top: 1px solid var(--border-light);
         }
-
-        .article h2:first-of-type { margin-top: 0; }
-
-        .article h3 {
-            font-size: 22px;
-            font-weight: 600;
-            letter-spacing: -0.5px;
-            margin: 40px 0 12px;
-            color: var(--text-primary);
-        }
-
-        .article p {
-            margin-bottom: 18px;
-            color: var(--text-secondary);
-        }
-
-        .article strong { color: var(--text-primary); font-weight: 600; }
-        .article em { color: var(--green); font-style: normal; }
-
-        .article a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .article a:hover { color: var(--accent-hover); }
-
-        .article ul, .article ol {
-            margin: 12px 0 24px;
-            padding-left: 20px;
-        }
-
-        .article li {
-            margin-bottom: 8px;
-            color: var(--text-secondary);
-        }
-
-        .article li::marker { color: var(--text-tertiary); }
+        article h2:first-child { margin-top: 0; border-top: none; padding-top: 0; }
+        article h3 { font-size: 18px; font-weight: 600; margin: 32px 0 10px; color: var(--text); }
+        article p { margin-bottom: 20px; color: var(--text-secondary); }
+        article strong { color: var(--text); }
+        article em { color: var(--accent); font-style: normal; }
+        article ul, article ol { margin: 8px 0 20px; padding-left: 24px; }
+        article li { margin-bottom: 8px; color: var(--text-secondary); }
 
         /* ========== BLOCKQUOTE ========== */
         blockquote {
-            border-left: 2px solid transparent;
-            border-image: linear-gradient(to bottom, #30d158, #2997ff) 1;
-            padding: 8px 24px;
-            margin: 32px 0;
+            border-left: 3px solid var(--accent);
+            padding: 2px 0 2px 24px;
+            margin: 28px 0;
         }
-
         blockquote p {
-            color: var(--text-primary) !important;
-            font-size: 20px !important;
-            font-weight: 500;
-            line-height: 1.5;
-            letter-spacing: -0.3px;
+            font-family: var(--font-serif);
+            font-size: 18px !important; font-style: italic;
+            color: var(--text) !important; line-height: 1.6;
         }
 
-        /* ========== INLINE CODE ========== */
+        /* ========== CODE ========== */
         code {
             font-family: var(--font-mono);
-            font-size: 14px;
-            background: var(--bg-card);
-            padding: 2px 8px;
-            border-radius: 5px;
-            color: var(--text-primary);
+            font-size: 14px; background: var(--bg-alt);
+            padding: 2px 6px; border-radius: 3px;
+            border: 1px solid var(--border-light);
         }
 
-        /* ========== CODE BLOCKS ========== */
-        .code-block {
-            background: var(--bg-code);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            margin: 24px 0;
-            overflow: hidden;
-        }
-
-        .code-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 16px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .code-lang {
-            font-family: var(--font-mono);
-            font-size: 11px;
-            font-weight: 500;
-            color: var(--text-tertiary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .code-dots { display: flex; gap: 6px; }
-        .code-dots span { width: 8px; height: 8px; border-radius: 50%; opacity: 0.6; }
-        .code-dots span:nth-child(1) { background: #ff5f57; }
-        .code-dots span:nth-child(2) { background: #febc2e; }
-        .code-dots span:nth-child(3) { background: #28c840; }
-
-        .code-block pre {
-            padding: 16px 20px;
-            overflow-x: auto;
-            font-family: var(--font-mono);
-            font-size: 13px;
-            line-height: 1.7;
-            color: var(--text-secondary);
-        }
-
-        .code-block .kw { color: #ff7b72; }
-        .code-block .st { color: #a5d6ff; }
-        .code-block .cm { color: #6e7681; font-style: italic; }
-        .code-block .fn { color: #d2a8ff; }
-        .code-block .nr { color: #79c0ff; }
-
-        /* ========== CALLOUTS ========== */
+        /* ========== CALLOUT ========== */
         .callout {
-            border-radius: 12px;
-            padding: 20px 24px;
-            margin: 28px 0;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-            position: relative;
-            overflow: hidden;
+            padding: 16px 20px; margin: 28px 0;
+            border-radius: 6px; border-left: 3px solid;
+            font-size: 15px; line-height: 1.6;
         }
-
-        .callout::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0; bottom: 0;
-            width: 3px;
-        }
-
-        .callout-icon { font-size: 18px; margin-bottom: 6px; display: block; }
-
-        .callout p { font-size: 15px !important; margin-bottom: 0 !important; line-height: 1.6; }
-
-        .callout.blue { border-color: rgba(41,151,255,0.15); background: linear-gradient(135deg, rgba(41,151,255,0.04), transparent); }
-        .callout.blue::before { background: linear-gradient(to bottom, #2997ff, #64d2ff); }
-        .callout.green { border-color: rgba(48,209,88,0.15); background: linear-gradient(135deg, rgba(48,209,88,0.04), transparent); }
-        .callout.green::before { background: linear-gradient(to bottom, #30d158, #64d2ff); }
-        .callout.yellow { border-color: rgba(255,159,10,0.15); background: linear-gradient(135deg, rgba(255,159,10,0.04), transparent); }
-        .callout.yellow::before { background: linear-gradient(to bottom, #ff9f0a, #ffd60a); }
-        .callout.red { border-color: rgba(255,69,58,0.15); background: linear-gradient(135deg, rgba(255,69,58,0.04), transparent); }
-        .callout.red::before { background: linear-gradient(to bottom, #ff375f, #ff9f0a); }
-
-        /* ========== FLOW DIAGRAM ========== */
-        .flow {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0;
-            margin: 36px 0;
-            flex-wrap: wrap;
-        }
-
-        .flow-node {
-            padding: 14px 24px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            text-align: center;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-            min-width: 120px;
-        }
-
-        .flow-node.his { border-color: rgba(41,151,255,0.3); color: var(--accent); }
-        .flow-node.ris { border-color: rgba(191,90,242,0.3); color: var(--purple); }
-        .flow-node.si { border-color: rgba(48,209,88,0.3); color: var(--green); }
-        .flow-node.minio { border-color: rgba(255,159,10,0.3); color: var(--orange); }
-
-        .flow-arrow {
-            color: var(--text-tertiary);
-            font-size: 18px;
-            padding: 0 8px;
-            font-weight: 300;
-        }
-
-        .flow-label {
-            font-size: 11px;
-            color: var(--text-tertiary);
-            display: block;
-            margin-top: 4px;
-            font-weight: 400;
-        }
+        .callout p { margin: 0 !important; }
+        .callout.blue { background: var(--accent-light); border-color: var(--accent); }
+        .callout.blue p { color: #2c5282; }
+        .callout.green { background: var(--green-light); border-color: var(--green); }
+        .callout.green p { color: var(--green); }
+        .callout.orange { background: var(--orange-light); border-color: var(--orange); }
+        .callout.orange p { color: var(--orange); }
+        .callout.red { background: var(--red-light); border-color: var(--red); }
+        .callout.red p { color: var(--red); }
 
         /* ========== TABLE ========== */
-        .table-wrap {
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            overflow: hidden;
-            margin: 28px 0;
+        .table-wrap { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin: 24px 0; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background: var(--bg-alt); font-weight: 600; text-align: left; padding: 10px 14px; font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+        td { padding: 10px 14px; border-top: 1px solid var(--border-light); color: var(--text-secondary); }
+        .badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; }
+        .badge.red { background: var(--red-light); color: var(--red); }
+        .badge.orange { background: var(--orange-light); color: var(--orange); }
+
+        /* ========== FLOW ========== */
+        .flow { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 32px 0; flex-wrap: wrap; }
+        .flow-node {
+            padding: 14px 20px; border-radius: 8px;
+            font-size: 14px; font-weight: 600; text-align: center;
+            border: 1px solid var(--border); min-width: 100px;
         }
-
-        table { width: 100%; border-collapse: collapse; font-size: 15px; }
-
-        th {
-            background: var(--bg-card);
-            color: var(--text-tertiary);
-            font-weight: 600;
-            text-align: left;
-            padding: 12px 16px;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        td {
-            padding: 12px 16px;
-            border-top: 1px solid var(--border);
-            color: var(--text-secondary);
-        }
-
-        tr:hover td { background: rgba(255,255,255,0.02); }
+        .flow-node small { display: block; font-size: 11px; font-weight: 400; color: var(--text-muted); margin-top: 2px; }
+        .flow-node.a { background: var(--accent-light); border-color: var(--accent-border); color: var(--accent); }
+        .flow-node.b { background: var(--green-light); border-color: var(--green-border); color: var(--green); }
+        .flow-arrow { color: var(--text-muted); font-size: 16px; }
 
         /* ========== TAGS ========== */
-        .tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin: 40px 0 32px;
-        }
-
-        .tag {
-            padding: 5px 12px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 100px;
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--text-tertiary);
-            transition: all 0.3s ease;
-        }
-
-        .tag:hover {
-            color: var(--text-primary);
-            border-color: rgba(48,209,88,0.4);
-            background: rgba(48,209,88,0.08);
-        }
+        .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 40px 0 20px; }
+        .tag { padding: 4px 12px; border: 1px solid var(--border); border-radius: 99px; font-size: 12px; color: var(--text-muted); transition: all 0.15s; }
+        .tag:hover { border-color: var(--accent); color: var(--accent); }
 
         /* ========== SHARE ========== */
-        .share {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 24px 0;
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .share-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-tertiary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
+        .share { display: flex; align-items: center; gap: 8px; padding: 16px 0; }
+        .share-label { font-size: 13px; color: var(--text-muted); margin-right: 4px; }
         .share-btn {
-            width: 36px; height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-tertiary);
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid var(--border); background: var(--bg);
+            color: var(--text-muted); font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all 0.15s;
         }
+        .share-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-        .share-btn:hover {
-            border-color: var(--border-hover);
-            color: var(--text-primary);
+        /* ========== VIEW COUNTER ========== */
+        .view-counter {
+            display: flex; align-items: center; justify-content: center;
+            gap: 8px; padding: 32px 0 16px;
+            font-size: 13px; color: var(--text-muted);
+        }
+        .view-count {
+            font-weight: 600; color: var(--text-secondary);
+            font-variant-numeric: tabular-nums;
         }
 
         /* ========== FOOTER ========== */
-        .footer { padding: 48px 0; text-align: center; }
-        .footer p { color: var(--text-tertiary); font-size: 13px; }
+        footer { padding: 32px 0; text-align: center; border-top: 1px solid var(--border-light); font-size: 13px; color: var(--text-muted); }
 
-        /* ========== FADE IN ========== */
-        .fi {
-            opacity: 0;
-            transform: translateY(16px);
-            transition: all 0.7s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
+        /* ========== ANIM ========== */
+        .fi { opacity: 0; transform: translateY(8px); transition: all 0.4s ease; }
         .fi.v { opacity: 1; transform: translateY(0); }
 
-        /* ========== RESPONSIVE ========== */
-        @media (max-width: 768px) {
-            .hero { padding: 120px 0 60px; }
-            .hero h1 { letter-spacing: -2px; }
+        @media (max-width: 640px) {
+            .hero { padding: 48px 0 32px; }
             .nav-links { display: none; }
-            .toc ol { grid-template-columns: 1fr; }
             .flow { flex-direction: column; }
             .flow-arrow { transform: rotate(90deg); }
-        }
-
-        @media (max-width: 480px) {
-            body { font-size: 16px; }
-            .article h2 { font-size: 28px; }
         }
     </style>
 </head>
 <body>
 
-<div class="reading-progress" id="readingProgress"></div>
+<div class="progress" id="prog"></div>
 
-<nav class="navbar">
-    <div class="container-wide">
-        <div class="nav-brand"><a href="index.html">vietda.ai</a></div>
+<nav>
+    <div class="container">
+        <a href="hl7-fhir.html" class="brand">healthcare <span style="color:#e53e3e">❤</span> ai</a>
         <div class="nav-links">
-            <a href="#context">Bối cảnh</a>
-            <a href="#architecture">Kiến trúc</a>
-            <a href="#signing">Ký số</a>
+            <a href="#challenges">Thách thức</a>
+            <a href="#solution">Giải pháp</a>
             <a href="#lessons">Bài học</a>
         </div>
     </div>
@@ -587,340 +229,255 @@
 
 <header class="hero">
     <div class="container">
-        <span class="hero-eyebrow">Healthcare IT · Deep Dive</span>
-        <h1>HL7 FHIR trong thực tế.<br>Bài học từ một HIS<br>đang chạy production.</h1>
-        <p class="hero-subtitle">
-            Không phải lý thuyết trên giấy. Đây là những gì thực sự xảy ra khi bạn triển khai HL7 FHIR 
-            trong một hệ thống bệnh viện với hàng nghìn lượt khám mỗi ngày.
+        <div class="hero-label">Healthcare Engineering</div>
+        <h1>HL7 FHIR trong thực tế:<br>thách thức triển khai tại bệnh viện Việt Nam</h1>
+        <p class="hero-desc">
+            FHIR được thiết kế cho thế giới lý tưởng. Bệnh viện Việt Nam thì không.
+            Đây là những gì thực sự xảy ra khi đưa chuẩn quốc tế vào vận hành
+            trong hệ thống với hàng nghìn lượt khám mỗi ngày.
         </p>
         <div class="hero-meta">
-            <span>Việt Anh</span>
-            <span class="sep"></span>
-            <span>21 tháng 3, 2026</span>
-            <span class="sep"></span>
-            <span>15 phút đọc</span>
-            <span class="sep"></span>
-            <span>Healthcare IT</span>
+            <span>✍️ Việt Anh</span>
+            <span>📅 Tháng 3, 2026</span>
+            <span>⏱️ 10 phút đọc</span>
         </div>
     </div>
 </header>
 
-<div class="container"><div class="divider"></div></div>
+<article class="container">
 
-<main class="container">
-
-    <div class="toc fi">
-        <div class="toc-label">Mục lục</div>
-        <ol>
-            <li><a href="#context">Bối cảnh: HIS tại Việt Nam</a></li>
-            <li><a href="#architecture">Kiến trúc tích hợp HL7 FHIR</a></li>
-            <li><a href="#signing">Digital Signing xuyên hệ thống</a></li>
-            <li><a href="#bhyt">Tích hợp BHYT & quy trình thanh toán</a></li>
-            <li><a href="#cdha">CDHA: Chẩn đoán hình ảnh & RIS</a></li>
-            <li><a href="#legacy">Reverse-engineering legacy code</a></li>
-            <li><a href="#lessons">Bài học cho Healthcare Developer</a></li>
-        </ol>
+    <!-- BỐI CẢNH -->
+    <div class="fi">
+        <h2 id="context">Bối cảnh</h2>
+        <p>
+            Hệ thống Thông tin Bệnh viện (HIS) tại Việt Nam là sự kết hợp của <strong>hàng chục module đan xen</strong> — tiếp nhận, khám bệnh, xét nghiệm, chẩn đoán hình ảnh, kê đơn, thanh toán BHYT. Tất cả vận hành real-time trong một hệ thống đã phát triển qua nhiều năm.
+        </p>
+        <p>
+            HL7 FHIR đem lại lời hứa: <strong>chuẩn hóa dữ liệu y tế, RESTful API, resource-based model</strong>.
+            Nhưng khi áp dụng vào bối cảnh Việt Nam — nơi quy trình BHYT thay đổi theo từng thông tư,
+            nơi mỗi bệnh viện có schema dữ liệu riêng — khoảng cách giữa lý thuyết và thực tế là rất lớn.
+        </p>
+        <blockquote>
+            <p>"FHIR spec cho bạn cách trao đổi dữ liệu. Nhưng nó không cho bạn cách vận hành trong hệ thống y tế Việt Nam."</p>
+        </blockquote>
     </div>
 
-    <article class="article">
+    <!-- THÁCH THỨC -->
+    <div class="fi">
+        <h2 id="challenges">Thách thức khi triển khai</h2>
+        <p>
+            FHIR được thiết kế bởi cộng đồng quốc tế, chủ yếu dựa trên mô hình y tế phương Tây.
+            Khi áp dụng vào Việt Nam, chúng tôi đã gặp <strong>những khoảng cách</strong> mà không có specification nào cover.
+        </p>
 
-        <h2 id="context">Bối cảnh: HIS tại Việt Nam</h2>
-        <div class="fi">
-            <p>
-                Hệ thống Thông Tin Bệnh Viện (HIS) tại Việt Nam không giống bất kỳ tutorial nào trên internet. Bạn đang làm việc với <strong>hàng chục module đan xen</strong> — từ tiếp nhận, khám bệnh, xét nghiệm, chẩn đoán hình ảnh, đến kê đơn và thanh toán BHYT — tất cả phải chạy <em>real-time</em> trong một hệ thống monolith đã tồn tại nhiều năm.
-            </p>
-            <p>
-                HL7 FHIR trên lý thuyết rất đẹp: chuẩn hóa dữ liệu y tế, RESTful API, resource-based model. Nhưng khi bạn đặt nó vào bối cảnh một bệnh viện Việt Nam — nơi quy trình BHYT thay đổi theo từng thông tư, nơi legacy code chứa đựng <strong>business rules không ai document</strong> — mọi thứ trở nên phức tạp hơn rất nhiều.
-            </p>
-            <blockquote>
-                <p>"FHIR spec bảo bạn cách trao đổi dữ liệu. Nó không bảo bạn cách survive quy trình BHYT."</p>
-            </blockquote>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Khía cạnh</th>
+                        <th>FHIR chuẩn</th>
+                        <th>Thực tế VN</th>
+                        <th>Mức độ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Mã dịch vụ</strong></td>
+                        <td>LOINC, SNOMED CT</td>
+                        <td>Mã riêng theo Bộ Y tế, thay đổi theo thông tư</td>
+                        <td><span class="badge red">Critical</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Đối tượng BN</strong></td>
+                        <td><code>Coverage</code> resource</td>
+                        <td>Hàng chục loại đối tượng BHYT, mỗi loại có mức hưởng, co-pay khác nhau</td>
+                        <td><span class="badge red">Critical</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Thanh toán</strong></td>
+                        <td><code>Claim</code> resource</td>
+                        <td>XML theo mẫu Bộ Y tế, gửi cổng giám định BHXH</td>
+                        <td><span class="badge red">Critical</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Quy trình</strong></td>
+                        <td>Workflow linh hoạt</td>
+                        <td>Quy trình cứng theo thông tư, thay đổi theo năm</td>
+                        <td><span class="badge orange">Tricky</span></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
-        <h2 id="architecture">Kiến trúc tích hợp HL7 FHIR</h2>
-        <div class="fi">
-            <p>
-                Hệ thống của chúng tôi bao gồm 3 thành phần chính và một <strong>integration layer</strong> đóng vai trò cầu nối:
-            </p>
+        <h3>Mapping dịch vụ — ba bộ mã, ba nguồn sự thật</h3>
+        <p>
+            Trong bệnh viện Việt Nam, mỗi dịch vụ tồn tại dưới <strong>ba bộ mã khác nhau</strong>:
+            mã BHYT (do Bộ Y tế quy định), mã nội bộ bệnh viện (dùng trong HIS), và mã FHIR (<code>ServiceRequest.code</code>).
+            Ba bộ mã phải mapping chính xác 100%. Sai mapping nghĩa là BHXH từ chối thanh toán,
+            và bệnh viện phải tự bù chi phí.
+        </p>
 
-            <div class="flow">
-                <div class="flow-node his">
-                    HIS
-                    <span class="flow-label">Hệ thống chính</span>
-                </div>
-                <span class="flow-arrow">→</span>
-                <div class="flow-node si">
-                    service_integrate
-                    <span class="flow-label">Integration Layer</span>
-                </div>
-                <span class="flow-arrow">→</span>
-                <div class="flow-node ris">
-                    RIS
-                    <span class="flow-label">Chẩn đoán hình ảnh</span>
-                </div>
-                <span class="flow-arrow">→</span>
-                <div class="flow-node minio">
-                    MinIO
-                    <span class="flow-label">Object Storage</span>
-                </div>
-            </div>
+        <h3>Format trao đổi dữ liệu — không phải RESTful</h3>
+        <p>
+            FHIR dùng RESTful API. Cổng giám định BHXH Việt Nam dùng <strong>XML theo mẫu riêng</strong>,
+            gửi qua web service với quy trình đối soát nhiều vòng. Bạn không thể map trực tiếp
+            FHIR <code>Claim</code> sang format BHXH — cần một transformation layer hoàn chỉnh.
+        </p>
 
-            <p>
-                <strong>HIS</strong> quản lý toàn bộ quy trình khám chữa bệnh. <strong>RIS</strong> (Radiology Information System) xử lý riêng phần chẩn đoán hình ảnh. <strong>service_integrate</strong> là layer trung gian, chịu trách nhiệm dịch dữ liệu giữa các hệ thống theo chuẩn HL7 FHIR.
-            </p>
+        <div class="callout orange">
+            <p><strong>Thách thức lớn nhất:</strong> Quy định BHYT thay đổi liên tục. Khi Bộ Y tế ra thông tư mới, toàn bộ mapping và validation rules có thể phải cập nhật — đôi khi chỉ trong vài ngày.</p>
+        </div>
+    </div>
 
-            <h3>Tại sao cần Integration Layer?</h3>
-            <p>
-                Câu trả lời ngắn: <strong>mỗi hệ thống nói một "ngôn ngữ" khác nhau</strong>. HIS lưu dữ liệu theo schema riêng, RIS có format khác, và BHYT yêu cầu XML theo mẫu của Bộ Y tế. service_integrate đứng giữa, nhận dữ liệu từ bất kỳ nguồn nào, transform sang FHIR resources, rồi forward đến destination.
-            </p>
+    <!-- GIẢI PHÁP -->
+    <div class="fi">
+        <h2 id="solution">Giải pháp kiến trúc</h2>
+        <p>
+            Sau nhiều iteration, chúng tôi đã thiết kế kiến trúc cho phép <strong>FHIR và quy trình địa phương cùng tồn tại</strong>, không phá vỡ lẫn nhau.
+        </p>
+
+        <h3>Integration Layer — Anti-corruption Pattern</h3>
+        <p>
+            Nguyên tắc cốt lõi: <strong>không bao giờ yêu cầu hệ thống cũ "nói" FHIR trực tiếp</strong>.
+            Chúng tôi xây dựng một integration layer đứng giữa — nhận dữ liệu từ bất kỳ nguồn nào,
+            transform sang FHIR resources, rồi forward đến destination. Khi cần gửi BHXH?
+            Transform ngược từ FHIR sang XML format BHXH.
+        </p>
+
+        <div class="flow">
+            <div class="flow-node a">HIS<small>Hệ thống cũ</small></div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-node b">Integration Layer<small>FHIR Transform</small></div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-node a">RIS / BHXH<small>Hệ thống ngoài</small></div>
         </div>
 
-        <div class="callout blue fi">
-            <span class="callout-icon">💡</span>
-            <p><strong>Key Design Decision:</strong> Chúng tôi không refactor HIS để "nói" FHIR native. Thay vào đó, service_integrate hoạt động như một <strong>anti-corruption layer</strong> — bảo vệ legacy code khỏi bị phá vỡ khi thêm integration mới.</p>
+        <div class="callout blue">
+            <p><strong>Key insight:</strong> Chi phí maintain thêm một lớp tích hợp <em>luôn rẻ hơn</em> chi phí refactor toàn bộ hệ thống cũ. Code đã chạy ổn định trên production — đừng phá vỡ nó chỉ để comply với chuẩn quốc tế.</p>
         </div>
 
-        <div class="fi">
-            <h3>FHIR Resources chúng tôi sử dụng</h3>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Resource</th>
-                            <th>Use Case</th>
-                            <th>Ghi chú</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>Patient</code></td><td>Thông tin bệnh nhân</td><td>Sync 2 chiều HIS ↔ RIS</td></tr>
-                        <tr><td><code>ServiceRequest</code></td><td>Phiếu chỉ định CLS</td><td>Map từ phiếu chỉ định nội bộ</td></tr>
-                        <tr><td><code>DiagnosticReport</code></td><td>Kết quả CDHA/XN</td><td>Kèm PDF signed document</td></tr>
-                        <tr><td><code>DocumentReference</code></td><td>File đính kèm, ký số</td><td>URL trỏ đến MinIO</td></tr>
-                        <tr><td><code>Practitioner</code></td><td>Bác sĩ, kỹ thuật viên</td><td>Dùng cho digital signing</td></tr>
-                        <tr><td><code>Bundle</code></td><td>Giao dịch đa resource</td><td>Transaction bundles cho atomicity</td></tr>
-                    </tbody>
-                </table>
-            </div>
+        <h3>Config-driven Rules — Thích ứng với thay đổi quy định</h3>
+        <p>
+            Quy định y tế thay đổi liên tục. Giải pháp: <strong>externalize toàn bộ business rules vào database config</strong>.
+            Hệ thống cấu hình trung tâm cho phép thay đổi mức hưởng, bật/tắt validation rules theo dịch vụ,
+            và quản lý mapping mã qua UI admin — tất cả <strong>không cần deploy code mới</strong>.
+        </p>
+
+        <h3>FHIR Resources — Customized cho Việt Nam</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>FHIR Resource</th><th>Sử dụng cho</th><th>Customization</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>Patient</code></td><td>Thông tin bệnh nhân</td><td>Extensions cho CMND/CCCD, mã BHXH</td></tr>
+                    <tr><td><code>Coverage</code></td><td>Bảo hiểm y tế</td><td>Extensions cho mã đối tượng, tuyến KCB</td></tr>
+                    <tr><td><code>ServiceRequest</code></td><td>Chỉ định dịch vụ</td><td>Dual coding: mã BHYT + mã nội bộ</td></tr>
+                    <tr><td><code>DiagnosticReport</code></td><td>Kết quả CLS</td><td>Linked PDF qua DocumentReference</td></tr>
+                    <tr><td><code>Bundle</code></td><td>Giao dịch</td><td>Transaction bundles cho atomicity</td></tr>
+                </tbody>
+            </table>
         </div>
 
-        <h2 id="signing">Digital Signing xuyên hệ thống</h2>
-        <div class="fi">
-            <p>
-                Đây là phần phức tạp nhất — và cũng là phần tôi tự hào nhất. Luồng ký số xuyên suốt <strong>3 hệ thống</strong>, mỗi hệ thống có vai trò riêng:
-            </p>
-
-            <h3>Luồng ký số: HIS-originated</h3>
-            <div class="code-block">
-                <div class="code-header">
-                    <div class="code-dots"><span></span><span></span><span></span></div>
-                    <div class="code-lang">Signing Flow — HIS Origin</div>
-                </div>
-                <pre><span class="nr">1.</span> <span class="kw">HIS</span>         Bác sĩ ký phiếu kết quả
-<span class="nr">2.</span> <span class="kw">HIS</span>         Gọi API ký số → nhận signed PDF
-<span class="nr">3.</span> <span class="kw">HIS → SI</span>    Push signed PDF lên service_integrate
-<span class="nr">4.</span> <span class="kw">SI</span>          Tạo DocumentReference (FHIR)
-<span class="nr">5.</span> <span class="kw">SI → MinIO</span>  Upload signed PDF lên object storage
-<span class="nr">6.</span> <span class="kw">SI</span>          Cập nhật DiagnosticReport.status
-<span class="nr">7.</span> <span class="kw">SI</span>          Insert sự kiện vào hsba_phieu_kysuKien</pre>
-            </div>
-
-            <h3>Luồng ký số: RIS-originated</h3>
-            <p>Khi chữ ký đến từ RIS (bác sĩ CDHA ký kết quả trên hệ thống riêng), luồng khác hoàn toàn:</p>
-            <div class="code-block">
-                <div class="code-header">
-                    <div class="code-dots"><span></span><span></span><span></span></div>
-                    <div class="code-lang">Signing Flow — RIS Origin</div>
-                </div>
-                <pre><span class="nr">1.</span> <span class="kw">RIS</span>         BS CDHA ký kết quả trên RIS
-<span class="nr">2.</span> <span class="kw">RIS → SI</span>    Push signed document qua FHIR API
-<span class="nr">3.</span> <span class="kw">SI</span>          Validate FHIR Bundle
-<span class="nr">4.</span> <span class="kw">SI → MinIO</span>  Store signed PDF
-<span class="nr">5.</span> <span class="kw">SI</span>          Cập nhật DocumentReference + URL
-<span class="nr">6.</span> <span class="kw">HIS</span>         Query SI để hiển thị signed document
-   <span class="cm">// Lưu ý: KHÔNG insert hsba_phieu_kysuKien</span>
-   <span class="cm">// vì chữ ký từ hệ thống ngoài</span></pre>
-            </div>
+        <div class="callout green">
+            <p><strong>Kết quả:</strong> Kiến trúc này cho phép comply với FHIR standard cho tích hợp xuyên hệ thống, đồng thời đáp ứng 100% yêu cầu BHXH — hai luồng hoạt động song song mà không phá vỡ lẫn nhau.</p>
         </div>
+    </div>
 
-        <div class="callout red fi">
-            <span class="callout-icon">🔥</span>
-            <p><strong>Gotcha:</strong> Quyết định <strong>không insert</strong> <code>hsba_phieu_kysuKien</code> cho RIS-originated signatures là critical. Nếu insert, HIS sẽ coi đó là ký nội bộ và trigger workflow sai — dẫn đến duplicate processing và data inconsistency.</p>
+    <!-- BÀI HỌC -->
+    <div class="fi">
+        <h2 id="lessons">Bài học rút ra</h2>
+
+        <h3>1. FHIR là standard, không phải solution</h3>
+        <p>
+            FHIR cho bạn cách cấu trúc dữ liệu. Cách bạn orchestrate data flow,
+            handle edge cases, đảm bảo data integrity — đều là engineering decisions phải tự thiết kế.
+        </p>
+
+        <h3>2. Integration layer là bắt buộc</h3>
+        <p>
+            Đừng yêu cầu hệ thống cũ "nói" FHIR trực tiếp. Xây một <strong>integration layer</strong> để dịch giữa hai thế giới.
+        </p>
+
+        <h3>3. Config-driven rules cho healthcare</h3>
+        <p>
+            Quy định y tế thay đổi liên tục. Hardcode business rules = deploy lại mỗi khi có thông tư mới.
+            Externalize rules vào config — cho phép thay đổi behavior mà không cần redeploy.
+        </p>
+
+        <h3>4. Test với data thực tế</h3>
+        <p>
+            Edge cases chỉ xuất hiện với data thật: Unicode trong tên bệnh nhân, dịch vụ bị disable giữa giờ,
+            timezone mismatch giữa frontend và backend…
+        </p>
+
+        <h3>5. Invest vào observability</h3>
+        <p>
+            Khi transaction fail ở integration layer, bạn cần biết ngay: fail ở bước nào? Data gửi đi thế nào?
+            <strong>Structured logging + trace IDs xuyên hệ thống</strong> là non-negotiable.
+        </p>
+    </div>
+
+    <!-- CONCLUSION -->
+    <div class="fi">
+        <div class="callout blue" style="margin-top: 48px;">
+            <p><strong>Tóm lại:</strong> Triển khai HL7 FHIR tại Việt Nam là một cuộc marathon, không phải sprint. Bạn cần kiến thức sâu về domain y tế, hiểu rõ quy trình vận hành bệnh viện, và thiết kế kiến trúc đủ linh hoạt để thích ứng với thay đổi liên tục từ cơ quan quản lý.</p>
         </div>
+    </div>
 
-        <div class="fi">
-            <h3>MinIO là trung tâm lưu trữ</h3>
-            <p>
-                Tất cả signed documents được lưu trữ trên <strong>MinIO</strong> — một object storage tương thích S3. Mỗi document được tham chiếu qua <code>DocumentReference</code> FHIR resource, với URL trỏ trực tiếp đến MinIO bucket.
-            </p>
-            <p>
-                Thiết kế này cho phép cả HIS lẫn RIS đều có thể <strong>truy xuất bất kỳ signed document nào</strong> mà không cần biết nó được tạo từ hệ thống nào. FHIR đóng vai trò "catalogue", MinIO là "kho chứa" thực tế.
-            </p>
-        </div>
+    <div class="tags fi">
+        <span class="tag">#HL7FHIR</span>
+        <span class="tag">#HealthcareIT</span>
+        <span class="tag">#HIS</span>
+        <span class="tag">#SystemIntegration</span>
+        <span class="tag">#HealthTech</span>
+        <span class="tag">#VietnamIT</span>
+    </div>
 
-        <h2 id="bhyt">Tích hợp BHYT & quy trình thanh toán</h2>
-        <div class="fi">
-            <p>
-                Nếu bạn nghĩ FHIR integration phức tạp, hãy thử thêm BHYT vào. Bảo Hiểm Y Tế Việt Nam có <strong>hệ thống riêng, format riêng, và quy trình thay đổi theo từng thông tư</strong>.
-            </p>
+    <div class="share fi">
+        <span class="share-label">Share</span>
+        <button class="share-btn" onclick="shareLinkedIn()" title="LinkedIn">in</button>
+        <button class="share-btn" onclick="shareTwitter()" title="X">𝕏</button>
+        <button class="share-btn" onclick="shareFacebook()" title="Facebook">f</button>
+        <button class="share-btn" onclick="copyLink()" id="copyBtn" title="Copy link">🔗</button>
+    </div>
 
-            <h3>Challenges thực tế</h3>
-            <ul>
-                <li><strong>DmcDoituongBhyt logic:</strong> Xác định đối tượng BHYT ảnh hưởng trực tiếp đến mức hưởng, cách tính co-pay, và format gửi cổng giám định. Một sai sót nhỏ → <em>từ chối thanh toán toàn bộ phiếu</em>.</li>
-                <li><strong>Mapping dịch vụ:</strong> Mã dịch vụ BHYT khác mã nội bộ bệnh viện khác mã FHIR <code>ServiceRequest.code</code>. Ba bộ mã, ba nguồn sự thật — phải mapping chính xác 100%.</li>
-                <li><strong>Thời gian thực hiện (<code>thoiGianThucHien</code>):</strong> Trường hợp xét nghiệm, thời gian thực hiện phải khớp với dữ liệu gửi BHYT. Frontend gửi timestamp, backend validate — sai format hoặc timezone là toàn bộ batch bị reject.</li>
-            </ul>
-        </div>
+    <div class="view-counter fi">
+        <span>👁️</span>
+        <span id="viewCount" class="view-count">—</span>
+        <span>lượt đọc</span>
+    </div>
 
-        <div class="callout yellow fi">
-            <span class="callout-icon">⚠️</span>
-            <p><strong>Bài học đắt giá:</strong> Đừng bao giờ giả định BHYT rules là static. Chúng tôi có một bảng config <code>soPhutCongChoTGTraKQ</code> cho phép điều chỉnh logic thời gian trả kết quả mà không cần deploy code mới. Đây là kiểu flexibility bạn sẽ cần khi làm healthcare.</p>
-        </div>
+</article>
 
-        <h2 id="cdha">CDHA: Chẩn đoán hình ảnh & RIS</h2>
-        <div class="fi">
-            <p>
-                Chẩn đoán hình ảnh (CDHA) là nơi FHIR integration thể hiện sức mạnh thực sự. Quy trình bao gồm:
-            </p>
-            <ul>
-                <li><strong>Chỉ định:</strong> BS khám tạo <code>ServiceRequest</code> trên HIS</li>
-                <li><strong>Thực hiện:</strong> KTV CDHA nhận chỉ định trên RIS, chụp ảnh, ghi kết quả</li>
-                <li><strong>Ký kết quả:</strong> BS CDHA ký số kết quả trên RIS</li>
-                <li><strong>Đồng bộ:</strong> Kết quả + signed PDF sync ngược lại HIS qua service_integrate</li>
-                <li><strong>Hiển thị:</strong> BS khám xem kết quả trực tiếp trên HIS — không cần mở RIS</li>
-            </ul>
-
-            <h3>Ràng buộc thời gian giữa các dịch vụ</h3>
-            <p>
-                Một trong những edge cases khó nhất: BHYT yêu cầu rằng <strong>thời gian thực hiện của dịch vụ A không được trùng khoảng thời gian thực hiện → trả kết quả của dịch vụ B</strong> cho cùng một bệnh nhân. Logic này phải check trên cả 3 sự kiện: <code>EV0030</code>, <code>EV0038</code>, <code>EV0047</code>.
-            </p>
-            <p>
-                Để implement, chúng tôi tạo một configurable validation layer, cho phép bật/tắt rule theo từng loại dịch vụ — vì quy định BHYT có thể thay đổi bất kỳ lúc nào.
-            </p>
-        </div>
-
-        <h2 id="legacy">Reverse-engineering legacy code</h2>
-        <div class="fi">
-            <p>
-                Đây là phần ít ai nói trên LinkedIn nhưng chiếm <strong>phần lớn thời gian thực tế</strong>. Khi bạn thêm FHIR vào một HIS đã chạy nhiều năm, bạn sẽ gặp:
-            </p>
-            <ul>
-                <li><strong>Business rules ẩn trong code:</strong> Tại sao có đoạn <code>if</code> check loại đối tượng BHYT trước khi gửi kết quả? Không ai nhớ. Comment bằng tiếng Việt từ 3 năm trước, người viết đã nghỉ việc.</li>
-                <li><strong>Side effects không document:</strong> Rename <code>thoiGianThucHien</code> thành <code>ngayGioThucHien</code> thôi mà break 4 service khác nhau — vì naming convention cũ đã ăn sâu vào DTO contracts.</li>
-                <li><strong>Config-driven behavior:</strong> Hệ thống dùng <code>SubHtCauHinhKey</code> để điều khiển flow runtime. Muốn hiểu behavior? Phải cross-reference database config + code logic + document đã cũ.</li>
-            </ul>
-
-            <blockquote>
-                <p>"Legacy code không phải code xấu. Nó là code đã survive production — và bên trong nó là kiến thức domain mà bạn phải decode."</p>
-            </blockquote>
-
-            <h3>AI như một legacy code translator</h3>
-            <p>
-                Đây là lúc AI trở nên <em>vô giá</em>. Tôi sử dụng AI để:
-            </p>
-            <ul>
-                <li><strong>Phân tích call graph:</strong> "Cho tôi xem tất cả các nơi gọi đến <code>DanhSachPhieuClsServiceImpl</code>" — trong vài giây có bản đồ dependency.</li>
-                <li><strong>Tìm business rules ẩn:</strong> Paste một đoạn code 500 dòng và hỏi "logic nghiệp vụ ẩn trong đây là gì?" — AI sẽ summarize rõ ràng hơn bất kỳ document nào.</li>
-                <li><strong>Assess impact của thay đổi:</strong> "Nếu tôi rename field này, ảnh hưởng scope bao nhiêu?" — critical cho refactoring mà không break production.</li>
-                <li><strong>Generate backward-compatible solutions:</strong> AI đề xuất cách thêm interface mới mà không phá vỡ old callers.</li>
-            </ul>
-        </div>
-
-        <div class="callout green fi">
-            <span class="callout-icon">🎯</span>
-            <p><strong>Pro tip:</strong> Khi dùng AI review legacy healthcare code, luôn cung cấp context về domain. AI biết FHIR spec, nhưng không biết quy trình BHYT Việt Nam. <strong>Bạn là domain expert — AI là force multiplier.</strong></p>
-        </div>
-
-        <h2 id="lessons">Bài học cho Healthcare Developer</h2>
-        <div class="fi">
-            <h3>1. FHIR là standard, không phải solution</h3>
-            <p>
-                FHIR cho bạn cách cấu trúc dữ liệu. Nhưng <em>cách bạn orchestrate data flow giữa các hệ thống</em>, <em>cách bạn handle edge cases của BHYT</em>, <em>cách bạn đảm bảo signed documents không bị tamper</em> — tất cả đều là engineering decisions bạn phải tự thiết kế.
-            </p>
-
-            <h3>2. Anti-corruption layer là bắt buộc</h3>
-            <p>
-                Đừng bao giờ yêu cầu legacy HIS "nói" FHIR trực tiếp. Tạo một <strong>service_integrate layer</strong> để dịch giữa hai thế giới. Chi phí maintenance thêm một layer rẻ hơn rất nhiều so với chi phí refactor toàn bộ HIS.
-            </p>
-
-            <h3>3. Config-driven rules cho healthcare</h3>
-            <p>
-                Quy định y tế thay đổi liên tục. Build logic nghiệp vụ hardcode vào code = deploy lại mỗi khi Bộ Y tế ra thông tư mới. <strong>Externalize rules vào database config</strong> — chúng tôi dùng pattern <code>SubHtCauHinhKey</code> và nó đã cứu chúng tôi nhiều lần.
-            </p>
-
-            <h3>4. Digital signing ≠ just adding a signature</h3>
-            <p>
-                Một signed document phải đảm bảo: <strong>integrity</strong> (không bị sửa), <strong>provenance</strong> (biết ai ký, từ hệ thống nào), và <strong>accessibility</strong> (mọi hệ thống đều xem được). Thiết kế MinIO + DocumentReference giải quyết cả 3 yêu cầu này.
-            </p>
-
-            <h3>5. Test với data thực tế</h3>
-            <p>
-                BHYT test data vs production data khác nhau <em>rất nhiều</em>. Edge cases bạn sẽ không bao giờ thấy với mock data: timezone mismatch, Unicode trong tên bệnh nhân, dịch vụ BHYT bị disable giữa giờ, ký số bị timeout khi HSM quá tải...
-            </p>
-
-            <h3>6. Invest vào observability</h3>
-            <p>
-                Khi FHIR transaction fail ở service_integrate, bạn cần biết ngay: fail ở bước nào? Data gửi đi trông thế nào? Response từ RIS là gì? <strong>Structured logging + trace IDs xuyên hệ thống</strong> là non-negotiable.
-            </p>
-        </div>
-
-        <div class="callout blue fi">
-            <span class="callout-icon">📋</span>
-            <p><strong>Tóm lại:</strong> HL7 FHIR trong production là một cuộc marathon, không phải sprint. Bạn cần kiến thức sâu cả về domain y tế lẫn software engineering. Và đừng quên — AI là một đồng đội mạnh mẽ trong hành trình này, đặc biệt khi reverse-engineer legacy code.</p>
-        </div>
-
-        <div class="tags fi">
-            <span class="tag">#HL7FHIR</span>
-            <span class="tag">#HealthcareIT</span>
-            <span class="tag">#HIS</span>
-            <span class="tag">#RIS</span>
-            <span class="tag">#DigitalSigning</span>
-            <span class="tag">#BHYT</span>
-            <span class="tag">#MedicalSystems</span>
-            <span class="tag">#LegacyCode</span>
-            <span class="tag">#SystemIntegration</span>
-            <span class="tag">#DotNET</span>
-        </div>
-
-        <div class="share fi">
-            <span class="share-label">Share →</span>
-            <button class="share-btn" onclick="shareLinkedIn()" title="LinkedIn">in</button>
-            <button class="share-btn" onclick="shareTwitter()" title="X">𝕏</button>
-            <button class="share-btn" onclick="shareFacebook()" title="Facebook">f</button>
-            <button class="share-btn" onclick="copyLink()" id="copyBtn" title="Copy">🔗</button>
-        </div>
-
-    </article>
-
-    <footer class="footer">
-        <p>© 2026 · Built with ❤️ and AI</p>
-    </footer>
-
-</main>
+<footer>
+    <div class="container">© 2026 healthcare ❤ ai</div>
+</footer>
 
 <script>
-    const bar = document.getElementById('readingProgress');
+    // Reading progress
+    const prog = document.getElementById('prog');
     window.addEventListener('scroll', () => {
-        const pct = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
-        bar.style.width = pct + '%';
+        prog.style.width = (scrollY / (document.documentElement.scrollHeight - innerHeight) * 100) + '%';
     });
 
+    // Fade in
     const obs = new IntersectionObserver(entries => {
         entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('v'); obs.unobserve(e.target); }});
-    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+    }, { threshold: 0.05 });
     document.querySelectorAll('.fi').forEach(el => obs.observe(el));
 
+    // Smooth scroll
     document.querySelectorAll('a[href^="#"]').forEach(a => {
         a.addEventListener('click', e => {
             e.preventDefault();
-            const t = document.querySelector(a.getAttribute('href'));
-            if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
         });
     });
 
+    // Share
     function shareLinkedIn() { open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(location.href)}`, '_blank'); }
-    function shareTwitter() {
-        open(`https://twitter.com/intent/tweet?text=${encodeURIComponent('HL7 FHIR trong thực tế — bài học từ một HIS production')}&url=${encodeURIComponent(location.href)}`, '_blank');
-    }
+    function shareTwitter() { open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(document.title)}&url=${encodeURIComponent(location.href)}`, '_blank'); }
     function shareFacebook() { open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(location.href)}`, '_blank'); }
     function copyLink() {
         navigator.clipboard.writeText(location.href).then(() => {
@@ -928,6 +485,30 @@
             b.textContent = '✓'; setTimeout(() => b.textContent = '🔗', 2000);
         });
     }
+
+    // Real view counter using CountAPI
+    (async () => {
+        const el = document.getElementById('viewCount');
+        try {
+            const ns = 'vietda-ai-blog';
+            const key = 'hl7-fhir-post';
+            const res = await fetch(`https://api.countapi.xyz/hit/${ns}/${key}`);
+            if (res.ok) {
+                const data = await res.json();
+                el.textContent = data.value.toLocaleString('vi-VN');
+            } else {
+                // Fallback: localStorage counter
+                let count = parseInt(localStorage.getItem('hl7_fhir_views') || '0') + 1;
+                localStorage.setItem('hl7_fhir_views', count);
+                el.textContent = count.toLocaleString('vi-VN');
+            }
+        } catch {
+            // Fallback: localStorage counter
+            let count = parseInt(localStorage.getItem('hl7_fhir_views') || '0') + 1;
+            localStorage.setItem('hl7_fhir_views', count);
+            el.textContent = count.toLocaleString('vi-VN');
+        }
+    })();
 </script>
 
 </body>
