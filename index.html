@@ -148,7 +148,7 @@
 
         /* ========== HERO ========== */
         .hero {
-            padding: 160px 0 80px;
+            padding: 120px 0 56px;
             text-align: center;
             position: relative;
         }
@@ -283,7 +283,7 @@
 
         /* ========== ARTICLE ========== */
         .article {
-            padding-bottom: 80px;
+            padding-bottom: 40px;
         }
 
         .article h2 {
@@ -291,7 +291,7 @@
             font-weight: 700;
             letter-spacing: -1.2px;
             color: var(--text-primary);
-            margin: 80px 0 12px;
+            margin: 56px 0 12px;
             line-height: 1.15;
         }
 
@@ -303,7 +303,7 @@
             font-size: 22px;
             font-weight: 600;
             letter-spacing: -0.5px;
-            margin: 40px 0 12px;
+            margin: 32px 0 10px;
             color: var(--text-primary);
         }
 
@@ -678,13 +678,29 @@
 
         /* ========== FOOTER ========== */
         .footer {
-            padding: 48px 0;
+            padding: 24px 0;
             text-align: center;
         }
 
         .footer p {
             color: var(--text-tertiary);
             font-size: 13px;
+        }
+
+        /* ========== VIEW COUNTER ========== */
+        .view-counter {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 24px 0 8px;
+            font-size: 13px;
+            color: var(--text-tertiary);
+        }
+        .view-count {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-variant-numeric: tabular-nums;
         }
 
         /* ========== FADE IN ========== */
@@ -718,9 +734,10 @@
         @media (max-width: 480px) {
             body { font-size: 15px; }
             .container, .container-wide { padding: 0 16px; }
-            .article h2 { font-size: 24px; }
+            .article h2 { font-size: 24px; margin-top: 40px; }
             .stat-num { font-size: 24px; }
-            .hero h1 { font-size: 28px; letter-spacing: -1px; }
+            .hero { padding: 90px 0 40px; }
+            .hero h1 { font-size: 36px; letter-spacing: -1.5px; }
             .stats { gap: 1px; }
             .stat { padding: 20px 12px; }
             table { font-size: 13px; }
@@ -1051,6 +1068,12 @@ tích root cause và đề xuất fix."</span></pre>
             <button class="share-btn" onclick="copyLink()" id="copyBtn" title="Copy">🔗</button>
         </div>
 
+        <div class="view-counter fi">
+            <span>👁️</span>
+            <span id="viewCount" class="view-count">—</span>
+            <span>lượt đọc</span>
+        </div>
+
     </article>
 
     <footer class="footer">
@@ -1092,6 +1115,22 @@ tích root cause và đề xuất fix."</span></pre>
             b.textContent = '✓'; setTimeout(() => b.textContent = '🔗', 2000);
         });
     }
+
+    // View counter
+    (async () => {
+        const el = document.getElementById('viewCount');
+        try {
+            const res = await fetch('https://api.counterapi.dev/v1/xoaicatchu-devai/visits/up');
+            if (res.ok) {
+                const data = await res.json();
+                el.textContent = data.count.toLocaleString('vi-VN');
+            } else { throw new Error(); }
+        } catch {
+            let c = parseInt(localStorage.getItem('devai_views') || '0') + 1;
+            localStorage.setItem('devai_views', c);
+            el.textContent = c.toLocaleString('vi-VN');
+        }
+    })();
 </script>
 
 </body>
