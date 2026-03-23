@@ -53,6 +53,8 @@ body {
     color: var(--text-primary);
     line-height: 1.7;
     overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -1092,6 +1094,15 @@ body {
         --section-padding: 60px 0;
     }
 
+    .floating-orbs {
+        display: none;
+    }
+
+    .hero-glow {
+        width: 300px;
+        height: 300px;
+    }
+
     .avatar-container {
         width: 160px;
         height: 160px;
@@ -1131,14 +1142,22 @@ body {
         padding: 20px;
     }
 
-    .method-icons {
-        gap: 16px;
+    .cta-card {
+        padding: 30px 16px;
     }
 
-    .method span {
-        width: 50px;
-        height: 50px;
-        font-size: 1.5rem;
+    .cta-card::before {
+        display: none;
+    }
+
+    .qr-container {
+        max-width: 260px;
+    }
+
+    .bank-detail {
+        flex-direction: column;
+        gap: 4px;
+        text-align: center;
     }
 
     .cta-buttons {

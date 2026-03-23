@@ -217,17 +217,19 @@
                     </div>
                 </div>
 
-                <!-- QR Modal -->
-                <div class="qr-modal" id="qr-modal" onclick="closeModal()">
-                    <div class="qr-modal-content" onclick="event.stopPropagation()">
-                        <button class="modal-close" onclick="closeModal()">✕</button>
-                        <img src="qr-bank.jpg" alt="QR Code" class="qr-modal-image">
-                        <p>Quét mã QR bằng ứng dụng ngân hàng</p>
-                    </div>
-                </div>
             </div>
         </div>
     </section>
+
+    <!-- QR Modal (outside all sections) -->
+    <div class="qr-modal" id="qr-modal" onclick="closeModal()">
+        <div class="qr-modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <img src="qr-bank.jpg" alt="QR Code" class="qr-modal-image">
+            <p>Quét mã QR bằng ứng dụng ngân hàng</p>
+        </div>
+    </div>
+
 
     <!-- Footer -->
     <footer class="footer" id="footer">
