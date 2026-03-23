@@ -280,3 +280,56 @@ document.getElementById('scroll-indicator')?.addEventListener('click', () => {
         }
     });
 })();
+
+// ========================================
+// QR MODAL
+// ========================================
+function openModal() {
+    document.getElementById('qr-modal')?.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+    document.getElementById('qr-modal')?.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+document.getElementById('qr-container')?.addEventListener('click', openModal);
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+});
+
+// ========================================
+// COPY ACCOUNT NUMBER
+// ========================================
+function copyAccount() {
+    const el = document.getElementById('account-number');
+    if (!el) return;
+    
+    navigator.clipboard.writeText('0945810190').then(() => {
+        const original = el.textContent;
+        el.textContent = 'Đã copy! ✅';
+        el.classList.add('copied');
+        setTimeout(() => {
+            el.textContent = original;
+            el.classList.remove('copied');
+        }, 2000);
+    }).catch(() => {
+        // Fallback
+        const textarea = document.createElement('textarea');
+        textarea.value = '0945810190';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        
+        const original = el.textContent;
+        el.textContent = 'Đã copy! ✅';
+        el.classList.add('copied');
+        setTimeout(() => {
+            el.textContent = original;
+            el.classList.remove('copied');
+        }, 2000);
+    });
+}

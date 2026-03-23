@@ -196,25 +196,33 @@
                         Liên Hệ Vinh
                     </a>
                 </div>
-                <div class="donation-methods">
-                    <p class="donation-label">Phương thức hỗ trợ:</p>
-                    <div class="method-icons">
-                        <div class="method" id="method-bank">
-                            <span>🏦</span>
-                            <small>Chuyển khoản</small>
+                <div class="qr-section">
+                    <p class="donation-label">Quét QR để chuyển khoản:</p>
+                    <div class="qr-container" id="qr-container">
+                        <img src="qr-bank.jpg" alt="QR Chuyển khoản MB Bank - HOANG CONG VINH - 0945810190" class="qr-image" id="qr-image">
+                    </div>
+                    <div class="bank-info">
+                        <div class="bank-detail">
+                            <span class="bank-label">🏦 Ngân hàng</span>
+                            <span class="bank-value">MB Bank</span>
                         </div>
-                        <div class="method" id="method-momo">
-                            <span>📱</span>
-                            <small>MoMo</small>
+                        <div class="bank-detail">
+                            <span class="bank-label">👤 Chủ tài khoản</span>
+                            <span class="bank-value">HOANG CONG VINH</span>
                         </div>
-                        <div class="method" id="method-crypto">
-                            <span>₿</span>
-                            <small>Crypto</small>
+                        <div class="bank-detail">
+                            <span class="bank-label">💳 Số tài khoản</span>
+                            <span class="bank-value copyable" id="account-number" onclick="copyAccount()">0945810190 📋</span>
                         </div>
-                        <div class="method" id="method-coffee">
-                            <span>☕</span>
-                            <small>Buy Coffee</small>
-                        </div>
+                    </div>
+                </div>
+
+                <!-- QR Modal -->
+                <div class="qr-modal" id="qr-modal" onclick="closeModal()">
+                    <div class="qr-modal-content" onclick="event.stopPropagation()">
+                        <button class="modal-close" onclick="closeModal()">✕</button>
+                        <img src="qr-bank.jpg" alt="QR Code" class="qr-modal-image">
+                        <p>Quét mã QR bằng ứng dụng ngân hàng</p>
                     </div>
                 </div>
             </div>
