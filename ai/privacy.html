@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Chính sách quyền riêng tư của AI Work Assistant / AI Work Assistant Privacy Policy">
+<title>AI Work Assistant — Privacy Policy</title>
+<style>
+:root{color-scheme:light;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#25324a;background:#f4f6f9;font-size:16px;line-height:1.75}
+*{box-sizing:border-box}body{margin:0;padding:32px 20px}main{max-width:920px;margin:auto;padding:40px 48px;background:#fff;border:1px solid #e0e6ee;border-radius:14px}h1,h2,h3{color:#16243b;line-height:1.35}h1{font-size:28px;margin:0 0 18px}h2{font-size:23px;margin:36px 0 18px;padding-bottom:10px;border-bottom:1px solid #e0e6ee}h3{font-size:18px;margin:28px 0 10px}p{margin:12px 0}ul{padding-left:24px}li{margin:9px 0}a{color:#075bb0;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}a:focus-visible{outline:2px solid #075bb0;outline-offset:3px}hr{border:0;border-top:1px solid #d9e2ee;margin:40px 0}table{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed;margin:18px 0}th,td{border:1px solid #dce4ee;padding:12px;vertical-align:top;text-align:left;overflow-wrap:anywhere}th{background:#eef4fb;color:#16243b}th:first-child,td:first-child{width:30%}strong{font-weight:650}
+@media(max-width:600px){body{padding:12px}main{padding:24px 18px;border-radius:10px}h1{font-size:23px}h2{font-size:21px}h3{font-size:17px}th,td{padding:8px;font-size:13px}th:first-child,td:first-child{width:34%}}
+@media print{body{padding:0;background:#fff}main{max-width:none;border:0;padding:0}h2,h3{break-after:avoid}tr{break-inside:avoid}}
+</style>
+</head>
+<body>
+<main><article>
+<h1>AI Work Assistant — Chính sách quyền riêng tư / Privacy Policy</h1>
+<p><strong>Cập nhật / Last updated: 13 October 2026</strong></p>
+<h2>Tiếng Việt</h2>
+<h3>1. Phạm vi và mục đích</h3>
+<p>AI Work Assistant là tiện ích trình duyệt hỗ trợ quản lý công việc trên Jira: đọc ticket, phân công, tạo subtask, ghi giờ làm việc, phân tích bằng AI, nhận lệnh và gửi thông báo Telegram, đồng bộ báo cáo Google Sheets. Chính sách này mô tả dữ liệu được xử lý bởi các chức năng đó.</p>
+<h3>2. Những dữ liệu được xử lý</h3>
+<ul>
+<li><strong>Dữ liệu Jira:</strong> địa chỉ hệ thống và URL ticket; mã, tiêu đề, mô tả, bình luận, trạng thái, loại ticket, người báo cáo, người nhận, hạn xử lý, estimate, worklog, subtask và các trường liên quan. Dữ liệu được dùng để hiển thị, phân tích, báo cáo và thực hiện thao tác công việc được yêu cầu hoặc đã cấu hình.</li>
+<li><strong>Cấu hình và thông tin kết nối:</strong> địa chỉ Jira, API key của nhà cung cấp AI, bot token Telegram, user/chat/group ID, ánh xạ tài khoản Jira–Telegram, model, endpoint và khóa kết nối Apps Script, lịch tự động và tùy chọn người dùng.</li>
+<li><strong>Lệnh và nội dung do người dùng cung cấp:</strong> câu hỏi, tin nhắn/lệnh Telegram được bot nhận và xử lý, hướng dẫn dự án, thông tin chuyên môn nhân sự, tài liệu và đoạn mã từ thư mục người dùng chọn cho chức năng phân tích mã nguồn.</li>
+<li><strong>Dữ liệu lưu cục bộ để vận hành:</strong> bộ nhớ đệm Jira, chỉ mục mã nguồn, kết quả AI, nội dung yêu cầu/phản hồi AI trong nhật ký, lịch sử phân công, bản ghi báo cáo, hàng chờ và lịch sử tin nhắn Telegram, nhật ký lỗi và thông tin chẩn đoán.</li>
+<li><strong>Thông tin tab liên quan:</strong> URL, tiêu đề và định danh tab được dùng để tìm đúng trang Jira và mở giao diện của tiện ích. Tiện ích không có chức năng thu thập toàn bộ lịch sử duyệt web để quảng cáo.</li>
+</ul>
+<p>Tiện ích sử dụng phiên đăng nhập Jira hiện có của trình duyệt để gửi yêu cầu đến Jira. Tiện ích không yêu cầu người dùng cung cấp mật khẩu Jira.</p>
+<h3>3. Dữ liệu gửi đến những bên nào</h3>
+<table>
+<thead>
+<tr>
+<th>Bên nhận</th>
+<th>Dữ liệu và mục đích</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Hệ thống Jira do người dùng cấu hình</strong></td>
+<td>Đọc dữ liệu công việc và gửi các thay đổi như phân công, tạo subtask, bình luận, ghi worklog hoặc đóng ticket theo thao tác/lịch tự động đã cấu hình.</td>
+</tr>
+<tr>
+<td><strong>DeepSeek hoặc Anthropic (Claude), tùy nhà cung cấp AI được chọn</strong></td>
+<td>Các yêu cầu AI có thể chứa dữ liệu ticket và bình luận, thông tin nhân sự/khối lượng việc, hướng dẫn dự án, câu hỏi và đoạn mã/tài liệu liên quan nhằm phân tích, đề xuất và trả lời. API key tương ứng được gửi tới nhà cung cấp để xác thực.</td>
+</tr>
+<tr>
+<td><strong>Telegram</strong></td>
+<td>Bot token được dùng để xác thực với Telegram Bot API; bot nhận lệnh/tin nhắn được Telegram chuyển về và gửi phản hồi, nội dung ticket, người nhận, hạn xử lý hoặc báo cáo đến chat/nhóm được chọn. Thành viên của chat/nhóm nhận có thể xem những thông tin được gửi.</td>
+</tr>
+<tr>
+<td><strong>Google Apps Script và Google Sheets do người dùng cấu hình</strong></td>
+<td>Khi kết nối hoặc đồng bộ, gửi khóa kết nối và các bản ghi báo cáo như mã/tiêu đề ticket, người nhận, thời gian phân công, estimate và trạng thái đến endpoint Apps Script và bảng tính đích. Người có quyền truy cập bảng tính có thể xem dữ liệu đó.</td>
+</tr>
+</tbody></table>
+<p>Các yêu cầu chức năng được gửi trực tiếp tới các dịch vụ tương ứng; tiện ích không có máy chủ trung gian riêng của nhà phát triển để tự động thu thập dữ liệu công việc. Tiện ích không tích hợp SDK quảng cáo hoặc công cụ phân tích hành vi duyệt web, và không bán dữ liệu người dùng.</p>
+<p>Các dịch vụ bên ngoài xử lý dữ liệu theo chính sách và điều khoản của họ. Việc lưu giữ, sử dụng và xóa dữ liệu tại các dịch vụ đó phụ thuộc nhà cung cấp, tài khoản và cấu hình liên quan; tiện ích không quyết định thay các dịch vụ này.</p>
+<h3>4. Điều khiển tính năng và truyền dữ liệu tự động</h3>
+<p>Người dùng có thể chọn nhà cung cấp AI, cấu hình hoặc ngắt Telegram/Sheets và bật/tắt Auto Mode. Khi bật chức năng tự động, tiện ích có thể đọc Jira, gọi AI, gửi thông báo hoặc đồng bộ theo lịch mà không cần bấm từng lần. Lệnh từ các tài khoản Telegram được cho phép cũng có thể kích hoạt những chức năng đã cấu hình.</p>
+<p>SR và CR có thể chọn nhóm nhận riêng. Loại ticket không chọn nhóm Telegram vẫn được phân công nhưng không tạo thông báo Telegram mới. Nút “Gửi ngay” gửi tin đang chờ theo yêu cầu trực tiếp của người dùng. Việc không chọn nhóm Telegram không tắt việc gọi AI trong Auto Mode.</p>
+<h3>5. Lưu trữ, bảo vệ và thời gian lưu giữ</h3>
+<p>Cấu hình, thông tin kết nối, cache, nhật ký và dữ liệu làm việc được lưu trong Chrome local storage, IndexedDB hoặc vùng lưu trữ phiên của tiện ích trên thiết bị. Các kho này không phải dịch vụ lưu mật khẩu có mã hóa riêng của tiện ích. Nhật ký AI có thể chứa nội dung yêu cầu và phản hồi; việc che một số dạng khóa/token không có nghĩa mọi nội dung công việc đã được ẩn danh.</p>
+<p>Dữ liệu cục bộ được giữ cho đến khi được thay thế, loại bỏ theo giới hạn nhật ký/bộ nhớ đệm, xóa bằng chức năng tương ứng, hoặc xóa cùng dữ liệu tiện ích trong trình duyệt. Các tệp cấu hình, CSV hoặc bản sao lưu do người dùng xuất ra được giữ tại vị trí họ lưu và phải được quản lý/xóa riêng. Bản sao lưu cấu hình có thể chứa API key và bot token.</p>
+<p>Kết nối đến các API DeepSeek, Anthropic, Telegram và Google dùng HTTPS. Kết nối Jira dùng địa chỉ người dùng cấu hình; nếu chọn địa chỉ HTTP thì phần kết nối Jira đó không được bảo vệ bằng TLS. Người dùng nên dùng HTTPS cho hệ thống Jira.</p>
+<h3>6. Ngừng sử dụng và xóa dữ liệu</h3>
+<p>Người dùng có thể tắt Auto Mode, tắt nhận lệnh Telegram, bỏ nhóm nhận, tắt đồng bộ Sheets, xóa cấu hình/nhật ký hoặc chỉ mục mã nguồn bằng chức năng hiện có, thu hồi khóa/token tại dịch vụ cấp khóa, hoặc gỡ tiện ích và xóa dữ liệu cục bộ qua công cụ trình duyệt.</p>
+<p>Tắt chức năng hoặc gỡ tiện ích không tự động xóa tin đã gửi vào Telegram, dữ liệu đã ghi vào Jira/Sheets, dữ liệu nhà cung cấp AI đã nhận hoặc tệp đã xuất. Việc xóa những dữ liệu đó phải được thực hiện tại nơi lưu tương ứng.</p>
+<h3>7. Liên hệ và cập nhật</h3>
+<p>Yêu cầu liên quan đến chính sách và dữ liệu có thể gửi qua <a href="https://github.com/xoaicatchu/java-open-library/issues">trang hỗ trợ dự án</a>. Đây là kênh công khai; không đưa token, API key, mật khẩu, dữ liệu Jira nội bộ hoặc mã nguồn riêng tư vào nội dung hỗ trợ công khai.</p>
+<p>Khi cách xử lý dữ liệu thay đổi, chính sách sẽ được cập nhật với ngày sửa đổi ở đầu trang.</p>
+<hr>
+<h2>English</h2>
+<h3>Scope and data processed</h3>
+<p>AI Work Assistant is a browser extension for Jira assignment, subtask creation, worklogs, AI analysis, Telegram commands/notifications and Google Sheets reporting.</p>
+<p>It processes Jira URLs and task data, including issue keys, titles, descriptions, comments, users, due dates, estimates, worklogs and custom fields; user-provided instructions, staff information, questions and Telegram commands; and code/document excerpts from folders selected for code analysis. Relevant tab URLs, titles and identifiers are used to locate Jira pages. It does not collect general browsing history for advertising or request a Jira password; Jira requests use the browser&#39;s existing authenticated session.</p>
+<p>The extension stores connection settings and credentials (including AI API keys, Telegram bot tokens, chat/user/group IDs and Apps Script connection keys), caches, code indexes, AI request/response logs, assignment records, notification queues/history and diagnostics locally in Chrome storage, IndexedDB or session storage.</p>
+<h3>Recipients and purposes</h3>
+<ul>
+<li><strong>Your configured Jira instance:</strong> task retrieval and configured work actions, including assignments, subtasks, comments, worklogs and issue closure.</li>
+<li><strong>Your selected AI provider, DeepSeek or Anthropic (Claude):</strong> AI prompts may include issue data/comments, staff/workload information, project instructions, questions and relevant code/document excerpts. The provider&#39;s API key authenticates these requests.</li>
+<li><strong>Telegram:</strong> bot authentication, receiving bot-delivered commands/messages, and sending replies, ticket notifications or reports to selected chats/groups. Recipients in those chats/groups can see the transmitted information.</li>
+<li><strong>Your configured Google Apps Script endpoint and Google Sheets:</strong> connection key and report records, such as ticket identifiers/titles, assignees, assignment times, estimates and status. Users with spreadsheet access can view those records.</li>
+</ul>
+<p>Functional requests go directly to their corresponding services, without a separate developer-operated intermediary collecting work data. The extension has no advertising or browsing-behavior analytics SDK and does not sell user data. External services handle received information under their own policies, terms, account settings and retention rules.</p>
+<h3>Controls, automatic operation and retention</h3>
+<p>Users choose AI providers and configure or disable integrations. Enabled automation can read Jira, call AI, send notifications and synchronize reports on a schedule; authorized Telegram commands can also trigger configured functions. SR and CR notification destinations are optional and separate. Disabling Telegram notifications does not disable AI requests in Auto Mode. “Send now” sends a queued message on a direct user action.</p>
+<p>Local data remains until replaced, pruned, removed using available controls, or deleted with the extension&#39;s browser data. Local storage is not a separately encrypted password vault. AI audit logs can contain request/response content; redacting some credential patterns is not full anonymization. Exported configuration backups can contain credentials and must be managed and deleted separately.</p>
+<p>AI, Telegram and Google API connections use HTTPS. Jira uses the configured URL; HTTP Jira connections do not have TLS protection, so HTTPS should be used.</p>
+<p>Users can disable automation/integrations, clear available logs/configuration/code indexes, revoke provider credentials, or uninstall the extension and remove its browser data. These actions do not automatically delete previously delivered Telegram messages, Jira/Sheets records, provider-side AI data or exported files; deletion must be requested or performed at the respective destination.</p>
+<h3>Contact and updates</h3>
+<p>Contact the project through <a href="https://github.com/xoaicatchu/java-open-library/issues">GitHub Issues</a>. This is a public channel: do not post secrets, internal Jira data or private source code. Material changes to data handling will be reflected in this policy and its last-updated date.</p>
+</article></main>
+</body>
+</html>
